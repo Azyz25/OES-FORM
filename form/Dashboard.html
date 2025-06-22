@@ -588,58 +588,81 @@ img.side-logo {
   </div>
 
 <script>
-  const sessionData = JSON.parse(localStorage.getItem("adminSession") || "{}");
+   const sessionData = JSON.parse(localStorage.getItem("adminSession") || "{}");
   if (!sessionData.timestamp || Date.now() - sessionData.timestamp > 30 * 60 * 1000) {
     localStorage.removeItem("adminSession");
     window.location.href = "login.html";
   }
+
+  // بعد ما تجيب sessionData من localStorage
+const perms = {};
+(sessionData.powers||'').split(' - ').forEach(p => {
+  const [sec, mode] = p.split(':').map(s=>s.trim());
+  perms[sec] = mode; // e.g. perms['sec3'] = 'hide' أو 'read&write'
+});
+
+// عرّف دالة لمنع الدخول مع إظهار الديالوج
+function guardClick(e){
+  e.stopImmediatePropagation();
+  showDialog();
+}
+
+// سكشنات السايدبار
+['sec1','sec2','sec3','sec4','sec5'].forEach(id => {
+  const li = document.getElementById(id);
+  if(!li) return;
+  if(perms[id] === 'hide'){
+    li.classList.add('disabled');
+    // تشيل الـ listener الأصلي لو ضفته قبل
+    li.replaceWith(li.cloneNode(true));
+    const newLi = document.getElementById(id);
+    newLi.classList.add('disabled');
+    newLi.addEventListener('click', guardClick);
+  }
+  // إذا read&write، يظل كما هو
+});
+
   document.getElementById('sidebarUser').textContent = "يا هلا فيك " + sessionData.user;
 
   // تبديل الأقسام
   document.getElementById('sec1').addEventListener('click', () => {
     document.getElementById('dashboardSection').style.display = 'block';
-    document.getElementById('staffSection').style.display = 'none';
-    document.getElementById('uploadSection').style.display    = 'none';
-    document.getElementById('currentSection').style.display    = 'none';
-    document.getElementById('trainersSection').style.display    = 'none';
+    document.getElementById('staffSection').style.display    = 'none';
+    document.getElementById('uploadSection').style.display   = 'none';
+    document.getElementById('currentSection').style.display  = 'none';
+    document.getElementById('trainersSection').style.display = 'none';
   });
-
-   document.getElementById('sec2').addEventListener('click', () => {
+  document.getElementById('sec2').addEventListener('click', () => {
     document.getElementById('uploadSection').style.display    = 'block';
     document.getElementById('dashboardSection').style.display = 'none';
-    document.getElementById('staffSection').style.display = 'none';
-   document.getElementById('currentSection').style.display    = 'none';
-    document.getElementById('trainersSection').style.display    = 'none';
+    document.getElementById('staffSection').style.display     = 'none';
+    document.getElementById('currentSection').style.display   = 'none';
+    document.getElementById('trainersSection').style.display  = 'none';
   });
-
-   document.getElementById('sec3').addEventListener('click', () => {
+  document.getElementById('sec3').addEventListener('click', () => {
     document.getElementById('uploadSection').style.display    = 'none';
     document.getElementById('dashboardSection').style.display = 'none';
-    document.getElementById('staffSection').style.display = 'none';
-   document.getElementById('currentSection').style.display    = 'block';
-    document.getElementById('trainersSection').style.display    = 'none';
+    document.getElementById('staffSection').style.display     = 'none';
+    document.getElementById('currentSection').style.display   = 'block';
+    document.getElementById('trainersSection').style.display  = 'none';
   });
-
-   document.getElementById('sec4').addEventListener('click', () => {
+  document.getElementById('sec4').addEventListener('click', () => {
     document.getElementById('uploadSection').style.display    = 'none';
     document.getElementById('dashboardSection').style.display = 'none';
-    document.getElementById('staffSection').style.display = 'none';
-   document.getElementById('currentSection').style.display    = 'none';
-    document.getElementById('trainersSection').style.display    = 'block';
+    document.getElementById('staffSection').style.display     = 'none';
+    document.getElementById('currentSection').style.display   = 'none';
+    document.getElementById('trainersSection').style.display  = 'block';
   });
-
   document.getElementById('sec5').addEventListener('click', () => {
     document.getElementById('dashboardSection').style.display = 'none';
-    document.getElementById('staffSection').style.display = 'block';
+    document.getElementById('staffSection').style.display     = 'block';
     document.getElementById('uploadSection').style.display    = 'none';
-    document.getElementById('currentSection').style.display    = 'none';
-    document.getElementById('trainersSection').style.display    = 'none';
+    document.getElementById('currentSection').style.display   = 'none';
+    document.getElementById('trainersSection').style.display  = 'none';
     loadUsers();
   });
 
-  // متغيرات للتخزين
- 
-
+  // إعداد Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyBlsY-MMxBz_cc6n8Xz-Z9hB2buun4jszI",
     authDomain: "abbait-4e902.firebaseapp.com",
@@ -652,102 +675,85 @@ img.side-logo {
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-  
 
   let trainersCount = 0;
-let totalPeriods  = 0;
-let busyCount     = 0;
+  let totalPeriods  = 0;
+  let busyCount     = 0;
+  let coursesCount  = 0;
 
-let ratioChart, statusChart;
+  let ratioChart, statusChart;
 
-// تحديث الرسمين معًا
-function updateCharts() {
-  // 1) تحديث الرسم الدائري الأول (ثلاثي المتغيرات)
-  const pie1Labels = ['إجمالي الفترات','المشغولة','المدربين'];
-  const pie1Data   = [ totalPeriods, busyCount, trainersCount ];
-  if (!ratioChart) {
-    const ctx = document.getElementById('ratioChart').getContext('2d');
-    ratioChart = new Chart(ctx, {
+  // تحديث المخططات
+  function updateCharts() {
+    // الدائري الأول
+    if (ratioChart) ratioChart.destroy();
+    const ctx1 = document.getElementById('ratioChart').getContext('2d');
+    ratioChart = new Chart(ctx1, {
       type: 'pie',
-      data: { labels: pie1Labels, datasets: [{ data: pie1Data }] }
+      data: {
+        labels: ['إجمالي الفترات', 'المشغولة', 'المدربين'],
+        datasets: [{ data: [totalPeriods, busyCount, trainersCount] }]
+      }
     });
-    document.getElementById('ratioChart').style.display = 'block';
-  } else {
-    ratioChart.data.datasets[0].data = pie1Data;
-    ratioChart.update();
-  }
 
-  // 2) تحديث الرسم الدائري الثاني (مشغولة vs غير مشغولة)
-  const freeCount   = totalPeriods - busyCount;
-  const pie2Labels  = ['مشغولة','غير مشغولة'];
-  const pie2Data    = [ busyCount, freeCount ];
-  if (!statusChart) {
+    // الدائري الثاني
+    if (statusChart) statusChart.destroy();
     const ctx2 = document.getElementById('statusChart').getContext('2d');
     statusChart = new Chart(ctx2, {
       type: 'pie',
-      data: { labels: pie2Labels, datasets: [{ data: pie2Data }] }
+      data: {
+        labels: ['مشغولة', 'غير مشغولة'],
+        datasets: [{ data: [busyCount, totalPeriods - busyCount] }]
+      }
     });
-  } else {
-    statusChart.data.datasets[0].data = pie2Data;
-    statusChart.update();
   }
-}
 
-// 1) جلب عدد المدربين
-
-
-// 2) حساب إجمالي الفترات
-db.ref("courses").once("value").then(snap => {
-  const data = snap.val() || {};
-  totalPeriods = Object.values(data).reduce((sum, c) => {
-    const slots = (c.time||"").split(",").map(t=>t.trim()).filter(Boolean);
-    return sum + slots.length;
-  }, 0);
-  document.getElementById("coursesCard").innerText = `📘 إجمالي الفترات: ${totalPeriods}`;
-  updateCharts();
-});
-
-// 3) جلب عدد الفترات المشغولة
-db.ref("trainees").once("value").then(snap => {
-  busyCount = snap.exists() ? Object.keys(snap.val()).length : 0;
-  document.getElementById("coursesCardNON").innerText = `📖 الفترات المشغولة: ${busyCount}`;
-  updateCharts();
-});
-
-db.ref("trainers").once("value").then(snap => {
-  trainersCount = snap.exists() ? Object.keys(snap.val()).length : 0;
-  document.getElementById("trainersCard").innerText = `👥 عدد المدربين: ${busyCount}`;
-  updateCharts();
-});
-
-  // رسم بيانات الدورات والتناسب
+  // جلب عدد الدورات واحتساب الفترات
   db.ref("courses").once("value").then(snap => {
-    const data = snap.val(), counts = {};
+    const data = snap.val() || {};
+    coursesCount = Object.keys(data).length;
+    totalPeriods = Object.values(data).reduce((sum, course) => {
+      const slots = (course.time || "").split(",").map(t => t.trim()).filter(Boolean);
+      return sum + slots.length;
+    }, 0);
+    document.getElementById("coursesCard").innerText = `📘 إجمالي الفترات: ${totalPeriods}`;
+    updateCharts();
+  });
+
+  // جلب عدد الفترات المشغولة
+  db.ref("trainees").once("value").then(snap => {
+    busyCount = snap.exists() ? Object.keys(snap.val()).length : 0;
+    document.getElementById("coursesCardNON").innerText = `📖 الفترات المشغولة: ${busyCount}`;
+    updateCharts();
+  });
+
+  // جلب عدد المدربين
+  db.ref("trainers").once("value").then(snap => {
+    trainersCount = snap.exists() ? Object.keys(snap.val()).length : 0;
+    document.getElementById("trainersCard").innerText = `👥 عدد المدربين: ${busyCount}`;
+    updateCharts();
+  });
+
+  // رسم عمودي وعدد الدورات مقابل المدربين (ثاني استخدام لنسبة)
+  db.ref("courses").once("value").then(snap => {
+    const data = snap.val() || {}, counts = {};
     for (let k in data) {
-      const date = data[k].date;
-      counts[date] = (counts[date] || 0) + 1;
+      counts[data[k].date] = (counts[data[k].date] || 0) + 1;
     }
     const dates = Object.keys(counts).sort();
-    const ctx1 = document.getElementById('coursesChart').getContext('2d');
-    new Chart(ctx1, {
+    new Chart(document.getElementById('coursesChart').getContext('2d'), {
       type: 'bar',
       data: {
         labels: dates,
-        datasets: [{ label: 'عدد الدورات', data: dates.map(d => counts[d]), backgroundColor: '#1abc9c' }]
+        datasets: [{
+          label: 'عدد الدورات',
+          data: dates.map(d => counts[d])
+        }]
       },
       options: { scales: { y: { beginAtZero: true } } }
     });
-
-    // رسم نسبة الدورات إلى المدربين (Pie)
-    const ctx2 = document.getElementById('ratioChart').getContext('2d');
-    new Chart(ctx2, {
-      type: 'pie',
-      data: {
-        labels: ['الدورات', 'المدربين'],
-        datasets: [{ data: [coursesCount, trainersCount] }]
-      }
-    });
   });
+
 
   // تصدير Excel مع تضمين الرسمين
   function exportExcel() {
@@ -858,7 +864,7 @@ function showAddUserDialog() {
   tbl += '<tr>';
   secs.forEach(s => {
     tbl += `<td>
-      <label><input type="radio" name="power_${s}" value="read"> قراءة فقط</label>
+      <label><input type="radio" name="power_${s}" value="hide">إخفاء القسم</label>
     </td>`;
   });
   tbl += '</tr>';
@@ -973,11 +979,11 @@ function showAddUserDialog() {
     secs.forEach(s => tbl += `<th>${titles[s]}</th>`);
     tbl += '</tr>';
 
-    ['read&write','read'].forEach(mode => {
+    ['read&write','hide'].forEach(mode => {
       tbl += '<tr>';
       secs.forEach(s => {
         const checked = parsed[s] === mode ? 'checked' : '';
-        const label = mode === 'read&write' ? 'قراءة وكتابة' : 'قراءة فقط';
+        const label = mode === 'read&write' ? 'قراءة وكتابة' : 'إخفاء';
         tbl += `<td><label>
           <input type="radio" name="power_${s}" value="${mode}" ${checked}> ${label}
         </label></td>`;
