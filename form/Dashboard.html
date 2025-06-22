@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة المشرف - الإحصائيات</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+  <style>
+
+    @font-face {
+  font-family: 'TheSansPlain';
+  src: url('TheSans-Plain.OTF') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* 2) تطبيق الخط على الصفحة كلها */
+html, body, * {
+  font-family: 'TheSansPlain', sans-serif !important;
+}
+    /* عام */
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: row;
+      font-family: 'Arial', sans-serif;
+      background: #f4f4f4;
+    }
+    h2 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    /* السايدبار */
+    .sidebar {
+      width: 250px;
+      background: linear-gradient(to bottom, #212856, #4c5fac);
+      border-radius: 25px 0px 0px 25px;
+      color: white;
+      min-height: 100vh;      
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .sidebar-user {
+      text-align: center;
+      color: #fff;
+      font-size: 16px;
+      margin-bottom: 20px;
+      margin-top: 20px;
+    }
+    .sidebar .top {
+      flex-grow: 1;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sidebar li {
+      padding: 12px 15px;
+      background: #1bc0be;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .sidebar li.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .sidebar li:hover:not(.disabled) {
+      background: #1abc9c;
+    }
+    .logout-btn {
+      background: #e74c3c;
+      text-align: center;
+      padding: 12px;
+      border-radius: 15px;
+      cursor: pointer;
+      margin-top: auto;
+    }
+    .logout-btn:hover {
+      background: #c0392b;
+    }
+
+    /* المحتوى الرئيسي */
+    .content {
+      flex-grow: 1;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+    }
+    .cards {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    .card {
+      flex: 1;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px #ddd;
+      text-align: center;
+      min-width: 250px;
+    }
+    canvas {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px #ddd;
+    }
+
+    /* جدول الصلاحيات */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    th, td {
+      padding: 15px;
+      border: 1px solid #dee2e6;
+      text-align: center;
+    }
+    th {
+      background-color: #1abc9c;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* الأزرار العامة */
+    .btn {
+      background: #1bc0be;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 14px;
+       display: block;
+      margin: 0 auto;   
+    }
+    .btn:hover {
+      background: #67ebe0;
+    }
+
+    /* زر الحفظ وإغلاق في الديالوقات */
+    .btn-submit {
+      background: #28a745;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+    .btn-close {
+      background: #6c757d;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      margin-inline-start: 10px;
+    }
+
+    /* كروت الموظفين */
+    .staff-card {
+      background: #fff;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .staff-card span {
+      font-weight: bold;
+    }
+
+    /* توحيد ديالوقات */
+    .dialog-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .dialog-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 500px;
+      max-width: 95vw;
+      box-shadow: 0 0 25px rgba(0,0,0,0.2);
+      direction: rtl;
+      text-align: right;
+    }
+    .dialog-box input,
+    .dialog-box select {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    .dialog-actions {
+      text-align: left;
+      margin-top: 20px;
+    }
+
+    /* تأكد إن staffSection ياخذ البادينق نفسه */
+    #staffSection {
+      flex: 1;
+      padding: 0;
+    }
+
+    #uploadSection {
+    background: #fff;
+    border-radius: 25px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    max-width: 800px;
+    margin: 40px auto;
+  }
+  #uploadSection h2 {
+    font-size: 24px;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #34495e;
+  }
+  .form-group input,
+  .form-group textarea,
+  .form-group select,
+  .form-group input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+  .slots-config {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .slot-group {
+    margin-bottom: 15px;
+  }
+
+  #currentSection {
+    background: #fff;
+    border-radius: 40px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    max-width: 1000px;
+    margin: 40px auto;
+  }
+  #currentSection h2 {
+    font-size: 24px;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .course-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+  .course-card {
+    background: #fafafa;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+  }
+  .course-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+  }
+  .course-info {
+    padding: 15px;
+    flex-grow: 1;
+  }
+  .course-info h3 {
+    margin: 0 0 10px;
+    color: #2c3e50;
+  }
+  .course-info p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #555;
+  }
+  .course-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background: #fff;
+  }
+  .course-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .course-actions button:hover {
+    color: #1abc9c;
+  }
+ .dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 40px;
+    overflow-y: auto;
+    z-index: 9999;
+  }
+  .dialog-box {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    width: 500px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    direction: rtl;
+    text-align: right;
+  }
+  .dialog-box h3 {
+    margin-top: 0;
+    color: #2c3e50;
+  }
+  .dialog-box .form-group {
+    margin-bottom: 15px;
+  }
+  .dialog-box label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+  }
+  .dialog-box input,
+  .dialog-box textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+  }
+  .dialog-box .actions {
+    text-align: left;
+    margin-top: 20px;
+  }
+  .dialog-box .btn-close {
+    margin-left: 10px;
+  }
+
+  #trainersSection {
+  background: #fff;
+  border-radius: 40px;
+  padding: 30px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  max-width: 1000px;
+  margin: 40px auto;
+  display: none;
+}
+#trainersSection h2 {
+  font-size: 24px;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  text-align: center;
+}
+#trainersTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+#trainersTable th, #trainersTable td {
+  padding: 12px 8px;
+  border: 1px solid #dee2e6;
+  text-align: center;
+}
+#trainersTable th {
+  background: #1abc9c;
+  color: #fff;
+}
+#trainersTable tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+.sidebar-user{
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 22px;
+    font-family: 'TheSansPlain' !important;
+}
+
+
+img.side-logo{
+    margin-bottom: 25px;
+}
+button.bt-s {
+    margin-right: 8px !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    height: 35px !important;
+    width: 35px !important;
+}
+img.side-logo {
+    margin-bottom: 25px !important;
+}
+
+
+/* تجعل overlay يسمح بالتمرير عموديًا وترفع الصندوق قليلًا لداخل الشاشة */
+.dialog-overlay {
+  align-items: flex-start !important;
+  padding: 40px 0 !important;
+  overflow-y: auto;
+}
+
+/* تحدد أقصى ارتفاع للصندوق وتُمكّن التمرير بداخله */
+.dialog-box {
+  max-height: 80vh !important;
+  overflow-y: auto !important;
+}
+
+
+
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <img class="side-logo" src="./OES-logo2.svg"/>
+    <div class="sidebar-user" id="sidebarUser"></div>
+    <div class="top">
+      <ul>
+        <li id="sec1">📊 الإحصائيات والتقارير</li>
+        <li id="sec2">⬆️ رفع دورة جديدة</li>
+        <li id="sec3">📚 الدورات الحالية</li>
+        <li id="sec4">👨‍🏫 قائمة المدربين</li>
+        <li id="sec5">⚙️ الصلاحيات والموظفين</li>
+      </ul>
+    </div>
+    <div class="logout-btn" onclick="logout()">تسجيل الخروج</div>
+  </div>
+
+  <div class="content">
+    <!-- داشبورد -->
+    <div id="dashboardSection">
+      <div class="cards">
+        <div class="card" id="trainersCard">المدربين: ...</div>
+        <div class="card" id="coursesCard">الدورات: ...</div>
+        <div class="card" id="coursesCardNON">الدورات المشغولة ...</div>
+      </div>
+      <canvas id="coursesChart" height="120"></canvas>
+      <!-- الرسم البياني للنسبة -->
+      <canvas id="ratioChart" height="120" style="display:none;"></canvas>
+      <canvas id="statusChart" height="8"></canvas>
+    </div>
+
+    <!-- صلاحيات الموظفين -->
+    <div id="staffSection" style="display: none;">
+      <h2>إدارة الصلاحيات والموظفين</h2>
+      <button class="btn" onclick="showAddUserDialog()">➕ إضافة موظف جديد</button>
+      <div id="usersContainer" style="margin-top: 20px;"></div>
+    </div>
+
+    <div id="uploadSection" style="display:none;">
+  <h2>⬆️ رفع دورة جديدة</h2>
+  <form id="uploadForm">
+    <div class="form-group">
+      <label for="courseTitle">عنوان الدورة</label>
+      <input type="text" id="courseTitle" required>
+    </div>
+    <div class="form-group">
+      <label for="courseDesc">وصف الدورة</label>
+      <textarea id="courseDesc" rows="3" required></textarea>
+    </div>
+    <div class="form-group">
+      <label for="courseDate">تاريخ الدورة</label>
+      <input type="date" id="courseDate" required>
+    </div>
+    <div class="slots-config">
+      <label><input type="checkbox" id="courseMulti"> أكثر من فترة</label>
+      <input type="number" id="slotsCount" placeholder="عدد الفترات" min="2" style="width:120px; display:none;">
+    </div>
+    <div id="slotsContainer">
+      <!-- هنا تضاف حقول الأوقات والمدة ديناميكياً -->
+      <div class="slot-group">
+        <label>الوقت</label>
+        <input type="time" class="slotTime" required>
+        <label>المدة</label>
+        <input type="text" class="slotDuration" placeholder="مثال: ساعتين" required>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="courseCategory">التصنيف</label>
+      <input type="text" id="courseCategory" placeholder="مثال: تطوير ذاتي" required>
+    </div>
+    <div class="form-group">
+      <label for="coursePlace">المكان</label>
+      <input type="text" id="coursePlace" placeholder="مثال: القاعة الرئيسية - جدة" required>
+    </div>
+    <div class="form-group">
+      <label for="courseTarget">الفئة المستهدفة</label>
+      <input type="text" id="courseTarget" placeholder="مثال: مدراء الإدارات" required>
+    </div>
+   
+    <button type="submit" class="btn">رفع الدورة</button>
+  </form>
+</div>
+<div id="currentSection" style="display:none;">
+  <h2>📚 الدورات الحالية</h2>
+  <div id="currentContainer" class="course-container"></div>
+</div>
+    
+<div id="trainersSection" style="display:none;">
+  <h2>👨‍🏫 قائمة المدربين</h2>
+  <button id="exportTrainersBtn" class="btn" style="margin-bottom: 20px;">📤 تصدير بيانات المدربين و دوراتهم</button>
+  <div style="overflow-x:auto;">
+    <table id="trainersTable">
+      <thead>
+        <tr>
+          <th>الاسم</th>
+          <th>البريد الإلكتروني</th>
+          <th>الجوال</th>
+          <th>رقم الهوية</th>
+          <th>وقت التسجيل</th>
+          <th>ايدي الدورة</th>
+          <th>عنوان الدورة</th>
+          <th>التاريخ</th>
+          <th>الوقت</th>
+          <th>المدة</th>
+          <th>التصنيف</th>
+          <th>المكان</th>
+          <th>الفئة المستهدفة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- ROWS تُضاف ديناميكياً -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+  </div>
+
+<script>
+  const sessionData = JSON.parse(localStorage.getItem("adminSession") || "{}");
+  if (!sessionData.timestamp || Date.now() - sessionData.timestamp > 30 * 60 * 1000) {
+    localStorage.removeItem("adminSession");
+    window.location.href = "login.html";
+  }
+  document.getElementById('sidebarUser').textContent = "يا هلا فيك " + sessionData.user;
+
+  // تبديل الأقسام
+  document.getElementById('sec1').addEventListener('click', () => {
+    document.getElementById('dashboardSection').style.display = 'block';
+    document.getElementById('staffSection').style.display = 'none';
+    document.getElementById('uploadSection').style.display    = 'none';
+    document.getElementById('currentSection').style.display    = 'none';
+    document.getElementById('trainersSection').style.display    = 'none';
+  });
+
+   document.getElementById('sec2').addEventListener('click', () => {
+    document.getElementById('uploadSection').style.display    = 'block';
+    document.getElementById('dashboardSection').style.display = 'none';
+    document.getElementById('staffSection').style.display = 'none';
+   document.getElementById('currentSection').style.display    = 'none';
+    document.getElementById('trainersSection').style.display    = 'none';
+  });
+
+   document.getElementById('sec3').addEventListener('click', () => {
+    document.getElementById('uploadSection').style.display    = 'none';
+    document.getElementById('dashboardSection').style.display = 'none';
+    document.getElementById('staffSection').style.display = 'none';
+   document.getElementById('currentSection').style.display    = 'block';
+    document.getElementById('trainersSection').style.display    = 'none';
+  });
+
+   document.getElementById('sec4').addEventListener('click', () => {
+    document.getElementById('uploadSection').style.display    = 'none';
+    document.getElementById('dashboardSection').style.display = 'none';
+    document.getElementById('staffSection').style.display = 'none';
+   document.getElementById('currentSection').style.display    = 'none';
+    document.getElementById('trainersSection').style.display    = 'block';
+  });
+
+  document.getElementById('sec5').addEventListener('click', () => {
+    document.getElementById('dashboardSection').style.display = 'none';
+    document.getElementById('staffSection').style.display = 'block';
+    document.getElementById('uploadSection').style.display    = 'none';
+    document.getElementById('currentSection').style.display    = 'none';
+    document.getElementById('trainersSection').style.display    = 'none';
+    loadUsers();
+  });
+
+  // متغيرات للتخزين
+ 
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBlsY-MMxBz_cc6n8Xz-Z9hB2buun4jszI",
+    authDomain: "abbait-4e902.firebaseapp.com",
+    databaseURL: "https://abbait-4e902-default-rtdb.firebaseio.com",
+    projectId: "abbait-4e902",
+    storageBucket: "abbait-4e902.appspot.com",
+    messagingSenderId: "12872633784",
+    appId: "1:12872633784:web:dc8ff66d9bc6c0eb38134d",
+    measurementId: "G-HD6J69MDH4"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  
+
+  let trainersCount = 0;
+let totalPeriods  = 0;
+let busyCount     = 0;
+
+let ratioChart, statusChart;
+
+// تحديث الرسمين معًا
+function updateCharts() {
+  // 1) تحديث الرسم الدائري الأول (ثلاثي المتغيرات)
+  const pie1Labels = ['إجمالي الفترات','المشغولة','المدربين'];
+  const pie1Data   = [ totalPeriods, busyCount, trainersCount ];
+  if (!ratioChart) {
+    const ctx = document.getElementById('ratioChart').getContext('2d');
+    ratioChart = new Chart(ctx, {
+      type: 'pie',
+      data: { labels: pie1Labels, datasets: [{ data: pie1Data }] }
+    });
+    document.getElementById('ratioChart').style.display = 'block';
+  } else {
+    ratioChart.data.datasets[0].data = pie1Data;
+    ratioChart.update();
+  }
+
+  // 2) تحديث الرسم الدائري الثاني (مشغولة vs غير مشغولة)
+  const freeCount   = totalPeriods - busyCount;
+  const pie2Labels  = ['مشغولة','غير مشغولة'];
+  const pie2Data    = [ busyCount, freeCount ];
+  if (!statusChart) {
+    const ctx2 = document.getElementById('statusChart').getContext('2d');
+    statusChart = new Chart(ctx2, {
+      type: 'pie',
+      data: { labels: pie2Labels, datasets: [{ data: pie2Data }] }
+    });
+  } else {
+    statusChart.data.datasets[0].data = pie2Data;
+    statusChart.update();
+  }
+}
+
+// 1) جلب عدد المدربين
+
+
+// 2) حساب إجمالي الفترات
+db.ref("courses").once("value").then(snap => {
+  const data = snap.val() || {};
+  totalPeriods = Object.values(data).reduce((sum, c) => {
+    const slots = (c.time||"").split(",").map(t=>t.trim()).filter(Boolean);
+    return sum + slots.length;
+  }, 0);
+  document.getElementById("coursesCard").innerText = `📘 إجمالي الفترات: ${totalPeriods}`;
+  updateCharts();
+});
+
+// 3) جلب عدد الفترات المشغولة
+db.ref("trainees").once("value").then(snap => {
+  busyCount = snap.exists() ? Object.keys(snap.val()).length : 0;
+  document.getElementById("coursesCardNON").innerText = `📖 الفترات المشغولة: ${busyCount}`;
+  updateCharts();
+});
+
+db.ref("trainers").once("value").then(snap => {
+  trainersCount = snap.exists() ? Object.keys(snap.val()).length : 0;
+  document.getElementById("trainersCard").innerText = `👥 عدد المدربين: ${busyCount}`;
+  updateCharts();
+});
+
+  // رسم بيانات الدورات والتناسب
+  db.ref("courses").once("value").then(snap => {
+    const data = snap.val(), counts = {};
+    for (let k in data) {
+      const date = data[k].date;
+      counts[date] = (counts[date] || 0) + 1;
+    }
+    const dates = Object.keys(counts).sort();
+    const ctx1 = document.getElementById('coursesChart').getContext('2d');
+    new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: dates,
+        datasets: [{ label: 'عدد الدورات', data: dates.map(d => counts[d]), backgroundColor: '#1abc9c' }]
+      },
+      options: { scales: { y: { beginAtZero: true } } }
+    });
+
+    // رسم نسبة الدورات إلى المدربين (Pie)
+    const ctx2 = document.getElementById('ratioChart').getContext('2d');
+    new Chart(ctx2, {
+      type: 'pie',
+      data: {
+        labels: ['الدورات', 'المدربين'],
+        datasets: [{ data: [coursesCount, trainersCount] }]
+      }
+    });
+  });
+
+  // تصدير Excel مع تضمين الرسمين
+  function exportExcel() {
+    // جدول البيانات
+    const t = trainersCount;
+    const c = coursesCount;
+    const table = document.createElement('table');
+    table.innerHTML = `
+      <tr><th>المقياس</th><th>القيمة</th></tr>
+      <tr><td>عدد المدربين</td><td>${t}</td></tr>
+      <tr><td>عدد الدورات</td><td>${c}</td></tr>
+    `;
+
+    // صور من الكانفاسات
+    const img1 = document.getElementById('coursesChart').toDataURL('image/png');
+    const img2 = document.getElementById('ratioChart').toDataURL('image/png');
+
+    // ملف HTML خاص بالإكسل
+    const html = `
+      <html xmlns:x="urn:schemas-microsoft-com:office:excel">
+      <head><meta charset="UTF-8"></head>
+      <body>
+        ${table.outerHTML}
+        <br/>
+        <img src="${img1}" />
+        <br/>
+        <img src="${img2}" />
+      </body>
+      </html>
+    `;
+    const uri = 'data:application/vnd.ms-excel;base64,';
+    const base64 = s => window.btoa(unescape(encodeURIComponent(s)));
+    const link = document.createElement('a');
+    link.href = uri + base64(html);
+    link.download = 'report.xls';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function showDialog() {
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    overlay.setAttribute('data-dialog', '');
+    overlay.innerHTML = `
+      <div class="dialog-box">
+        <h3 style="color: #e74c3c; margin-bottom: 15px;">🚫 ما يمديك تدخل</h3>
+        <p style="margin-bottom: 20px;">تواصل مع المسؤول علشان تجيب صلاحية</p>
+        <div class="dialog-actions">
+          <button class="btn-submit" onclick="this.closest('[data-dialog]').remove()">حسنًا</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  function logout() {
+    localStorage.removeItem("adminSession");
+    window.location.href = "login.html";
+  }
+
+  // تبديل الأقسام
+  document.getElementById('sec5').addEventListener('click', () => {
+    document.getElementById('dashboardSection').style.display = 'none';
+    document.getElementById('staffSection').style.display = 'block';
+    loadUsers();
+  });
+
+  function generatePassword() {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    let pass = "";
+    while (true) {
+      pass = Array(12).fill().map(_ => chars[Math.floor(Math.random() * chars.length)]).join('');
+      if (/[A-Z]/.test(pass) && /\d/.test(pass) && /[!@#$%^&*]/.test(pass)) break;
+    }
+    return pass;
+  }
+function showAddUserDialog() {
+  const overlay = document.createElement('div');
+  overlay.className = 'dialog-overlay';
+  overlay.setAttribute('data-dialog', '');
+
+  // أقسام النظام وعناوينها
+  const secs = ['sec1','sec2','sec3','sec4','sec5'];
+  const titles = {
+    sec1: 'الإحصائيات',
+    sec2: 'رفع دورة',
+    sec3: 'الدورات الحالية',
+    sec4: 'قائمة المدربين',
+    sec5: 'الموظفين'
+  };
+
+  // توليد صفوف الجدول: رأس وعرض صلاحيات
+  let tbl = '<table style="width:100%;text-align:center;margin:20px 0;"><thead><tr>';
+  secs.forEach(s => tbl += `<th>${titles[s]}</th>`);
+  tbl += '</tr></thead><tbody>';
+
+  // صف "قراءة وكتابة"
+  tbl += '<tr>';
+  secs.forEach(s => {
+    tbl += `<td>
+      <label><input type="radio" name="power_${s}" value="read&write" checked> قراءة وكتابة</label>
+    </td>`;
+  });
+  tbl += '</tr>';
+
+  // صف "قراءة فقط"
+  tbl += '<tr>';
+  secs.forEach(s => {
+    tbl += `<td>
+      <label><input type="radio" name="power_${s}" value="read"> قراءة فقط</label>
+    </td>`;
+  });
+  tbl += '</tr>';
+
+  tbl += '</tbody></table>';
+
+  // صفحة الـ dialog
+  overlay.innerHTML = `
+    <div class="dialog-box">
+      <h3 style="margin-bottom:20px;">➕ إضافة موظف جديد</h3>
+      <div class="form-group"><label>اسم الموظف</label>
+        <input type="text" id="newName" placeholder="مثال: موظف قسم التدريب">
+      </div>
+      <div class="form-group"><label>نوع المستخدم</label>
+        <select id="newType">
+          <option value="employee">موظف</option>
+          <option value="admin">مدير</option>
+        </select>
+      </div>
+      <div class="form-group"><label>كلمة المرور (تتولد تلقائيًا)</label>
+        <input type="text" id="newPassword" value="${generatePassword()}" disabled>
+      </div>
+      <div><strong>الصلاحيات</strong>${tbl}</div>
+      <div class="dialog-actions">
+        <button class="btn-submit" onclick="saveUser(document.getElementById('newPassword').value)">حفظ</button>
+        <button class="btn-close" onclick="this.closest('[data-dialog]').remove()">إغلاق</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+  function saveUser(password, btn) {
+    const name = document.getElementById('newName').value.trim();
+    const type = document.getElementById('newType').value;
+    let pws = [];
+    for (let i = 1; i <= 5; i++) {
+      const val = document.querySelector(`input[name=sec${i}]:checked`);
+      if (val) pws.push(`sec${i}: ${val.value}`);
+    }
+    if (!name || !pws.length) return alert("يرجى تعبئة كل الحقول واختيار صلاحيات");
+    const id = 'user_' + Date.now();
+    db.ref("users/" + id).set({ name, type, password, powers: pws.join(" - ") })
+      .then(() => {
+        alert("✅ تم حفظ الموظف!");
+        document.querySelector('[data-dialog]').remove();
+        loadUsers();
+      });
+  }
+
+  function loadUsers() {
+    db.ref("users").once("value").then(snap => {
+      const users = snap.val() || {}, cont = document.getElementById("usersContainer");
+      let html = '';
+      const mapName = { sec1:'الإحصائيات',sec2:'رفع دورة',sec3:'الدورات الحالية',sec4:'قائمة المدربين',sec5:'الموظفين و الصلاحيات' };
+      Object.entries(users).forEach(([id, u]) => {
+        const rd = u.powers.split('-').map(p => mapName[p.trim().split(':')[0]]).join('، ');
+        html += `
+          <div class="staff-card">
+            <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+              <strong>${u.name}</strong>
+              <div style="display:flex;align-items:center;gap:5px;">
+                <span>${u.password}</span>
+                <button style="margin-right: 8px !important;border: 0 !important;border-radius: 10px !important;height: 35px !important;width: 35px !important;" onclick="navigator.clipboard.writeText('${u.password}')" title="نسخ">📋</button>
+              </div>
+              <div><strong>${u.type==='admin'?'مدير':'موظف'}</strong></div>
+              <div>صلاحيات: ${rd||'—'}</div>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <button style="margin-right: 8px !important;border: 0 !important;border-radius: 10px !important;height: 35px !important;width: 35px !important;" onclick="editUser('${id}')" title="تعديل">✏️</button>
+              <button style="margin-right: 8px !important;border: 0 !important;border-radius: 10px !important;height: 35px !important;width: 35px !important;" onclick="confirmDeleteUser('${id}')" title="حذف">🗑️</button>
+            </div>
+          </div>`;
+      });
+      cont.innerHTML = html || 'لا يوجد موظفين.';
+    });
+  }
+
+  function confirmDeleteUser(id) {
+    if (confirm("هل أنت متأكد من حذف هذا الموظف؟")) {
+      db.ref("users/" + id).remove();
+      loadUsers();
+    }
+  }
+
+  function editUser(id) {
+  const secs = ['sec1','sec2','sec3','sec4','sec5'];
+  const titles = {
+    sec1: 'الإحصائيات',
+    sec2: 'رفع دورة',
+    sec3: 'الدورات الحالية',
+    sec4: 'قائمة المدربين',
+    sec5: 'الموظفين'
+  };
+
+  db.ref("users/" + id).once("value").then(snap => {
+    const u = snap.val();
+
+    // إذا كانت الصلاحيات "all"، نُعتبرها قراءة وكتابة لكل الأقسام
+    const parsed = {};
+    if (u.powers.trim() === 'all') {
+      secs.forEach(s => parsed[s] = 'read&write');
+    } else {
+      u.powers.split('-').forEach(p => {
+        const [k, v] = p.trim().split(':').map(s => s.trim());
+        parsed[k] = v;
+      });
+    }
+
+    // بناء جدول الاختيارات ديناميكيًّا
+    let tbl = '<table style="width:100%;margin:10px 0;text-align:center;"><tr>';
+    secs.forEach(s => tbl += `<th>${titles[s]}</th>`);
+    tbl += '</tr>';
+
+    ['read&write','read'].forEach(mode => {
+      tbl += '<tr>';
+      secs.forEach(s => {
+        const checked = parsed[s] === mode ? 'checked' : '';
+        const label = mode === 'read&write' ? 'قراءة وكتابة' : 'قراءة فقط';
+        tbl += `<td><label>
+          <input type="radio" name="power_${s}" value="${mode}" ${checked}> ${label}
+        </label></td>`;
+      });
+      tbl += '</tr>';
+    });
+    tbl += '</table>';
+
+    // بناء الـ dialog
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    overlay.setAttribute('data-dialog', '');
+    overlay.innerHTML = `
+      <div class="dialog-box">
+        <h3 style="margin-bottom:15px;">تعديل ${u.name}</h3>
+        <div class="form-group">
+          <label>الاسم</label>
+          <input type="text" id="editName" value="${u.name}" />
+        </div>
+        <div class="form-group">
+          <label>النوع</label>
+          <select id="editType">
+            <option value="admin" ${u.type==='admin'?'selected':''}>مدير</option>
+            <option value="employee" ${u.type==='employee'?'selected':''}>موظف</option>
+          </select>
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+          <input type="text" id="editPassword" value="${u.password}" disabled style="background:#eee;flex:1;">
+          <button class="btn-submit" onclick="navigator.clipboard.writeText('${u.password}')">📋 نسخ</button>
+          <button class="btn-submit" onclick="confirmPasswordReset('${id}')">🔁 إعادة تعيين</button>
+        </div>
+        <strong>الصلاحيات</strong>
+        ${tbl}
+        <div class="dialog-actions">
+          <button class="btn-submit" onclick="saveEdit('${id}')">حفظ</button>
+          <button class="btn-close" onclick="this.closest('[data-dialog]').remove()">إغلاق</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  });
+}
+
+  function confirmPasswordReset(id) {
+    if (confirm("هل أنت متأكد من توليد كلمة مرور جديدة؟")) {
+      const newP = generatePassword();
+      db.ref("users/" + id + "/password").set(newP);
+      alert("✅ تم توليد كلمة مرور جديدة!");
+      document.getElementById('editPassword').value = newP;
+    }
+  }
+
+  function saveEdit(id) {
+    const name = document.getElementById('editName').value.trim();
+    const type = document.getElementById('editType').value;
+    let pws = '';
+    ['sec1','sec2','sec3','sec4','sec5'].forEach(s => {
+      const sel = document.querySelector(`input[name="power_${s}"]:checked`);
+      pws += `${s}: ${sel ? sel.value : 'hide'} - `;
+    });
+    pws = pws.replace(/- $/, '');
+    db.ref("users/" + id).update({ name, type, powers: pws })
+      .then(() => {
+        alert("✅ تم الحفظ!");
+        document.querySelector('[data-dialog]').remove();
+        loadUsers();
+      });
+  }
+document.getElementById('sec2').addEventListener('click', () => {
+    document.getElementById('dashboardSection').style.display = 'none';
+    document.getElementById('staffSection').style.display = 'none';
+    document.getElementById('uploadSection').style.display = 'block';
+  });
+
+  // إعداد تعدد الفترات
+  const multiCheckbox = document.getElementById('courseMulti');
+  const slotsCountInput = document.getElementById('slotsCount');
+  const slotsContainer = document.getElementById('slotsContainer');
+  multiCheckbox.addEventListener('change', () => {
+    slotsCountInput.style.display = multiCheckbox.checked ? 'inline-block' : 'none';
+    if (!multiCheckbox.checked) {
+      slotsContainer.innerHTML = document.querySelector('.slot-group').outerHTML;
+    }
+  });
+  slotsCountInput.addEventListener('input', () => {
+    const n = parseInt(slotsCountInput.value) || 1;
+    slotsContainer.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      slotsContainer.innerHTML += `
+        <div class="slot-group">
+          <label>الوقت ${i+1}</label>
+          <input type="time" class="slotTime" required>
+          <label>المدة ${i+1}</label>
+          <input type="text" class="slotDuration" placeholder="مثال: ساعتين" required>
+        </div>`;
+    }
+  });
+
+  // التعامل مع رفع البيانات
+  document.getElementById('uploadForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const title    = document.getElementById('courseTitle').value.trim();
+    const desc     = document.getElementById('courseDesc').value.trim();
+    const date     = document.getElementById('courseDate').value;
+    const times    = Array.from(document.querySelectorAll('.slotTime')).map(i => i.value);
+    const durations= Array.from(document.querySelectorAll('.slotDuration')).map(i => i.value.trim());
+    const category = document.getElementById('courseCategory').value.trim();
+    const place    = document.getElementById('coursePlace').value.trim();
+    const target   = document.getElementById('courseTarget').value.trim();
+    const multi    = multiCheckbox.checked;
+    
+    // تحقق من الحقول
+    if (!title||!desc||!date||times.some(t=>!t)||durations.some(d=>!d)||!category||!place||!target) {
+      return alert('رجاءً عبّي كل الحقول');
+    }
+
+    // إعداد كائن الدورة مع image فارغ
+    const course = { title, description: desc, date, time: times.join(','), duration: durations.join(','), category, place, target, image: "", multiSlots: multi };
+
+    // حفظ البيانات
+    firebase.database().ref('courses').push(course)
+      .then(() => {
+        alert('✅ تم رفع الدورة بنجاح!');
+        document.getElementById('uploadForm').reset();
+        slotsContainer.innerHTML = document.querySelector('.slot-group').outerHTML;
+      })
+      .catch(err => alert('❌ خطأ: ' + err.message));
+  });
+
+ // مستمع واحد فقط لتبديل الأقسام
+  document.getElementById('sec3').addEventListener('click', () => {
+    ['dashboardSection','staffSection','uploadSection'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    document.getElementById('currentSection').style.display = 'block';
+    loadCurrentCourses();
+  });
+
+  // جلب وعرض الدورات من Firebase
+  function loadCurrentCourses() {
+    const container = document.getElementById('currentContainer');
+    container.innerHTML = '';
+    firebase.database().ref('courses').once('value').then(snapshot => {
+      const data = snapshot.val() || {};
+      Object.entries(data).forEach(([id, course]) => {
+        const imgSrc = course.image && course.image.trim() !== '' ? course.image : 'default-image.svg';
+        container.insertAdjacentHTML('beforeend', `
+          <div class="course-card">
+            <img src="${imgSrc}" onerror="this.onerror=null;this.src='default-image.svg';" alt="${course.title}" />
+            <div class="course-info">
+              <h3>${course.title}</h3>
+              <p>${course.description}</p>
+              <p>📅 ${course.date}</p>
+              <p>⏰ ${course.time}</p>
+              <p>⏳ ${course.duration}</p>
+              <p>🏷️ ${course.category}</p>
+              <p>📍 ${course.place}</p>
+              <p>👥 ${course.target}</p>
+            </div>
+            <div class="course-actions">
+              <button onclick="editCourse('${id}')" title="تعديل">✏️</button>
+              <button onclick="deleteCourse('${id}')" title="حذف">🗑️</button>
+            </div>
+          </div>
+        `);
+      });
+    });
+  }
+
+  // دوال التعديل والحذف
+  let currentEditId = null;
+  function editCourse(id) {
+    currentEditId = id;
+    firebase.database().ref('courses/' + id).once('value').then(snapshot => {
+      const c = snapshot.val();
+      const overlay = document.createElement('div'); overlay.className = 'dialog-overlay';
+      overlay.innerHTML = `
+        <div class="dialog-box">
+          <h3>تعديل الدورة</h3>
+          <div class="form-group"><label>العنوان</label><input id="d_title" value="${c.title}" /></div>
+          <div class="form-group"><label>الوصف</label><textarea id="d_desc">${c.description}</textarea></div>
+          <div class="form-group"><label>التاريخ</label><input type="date" id="d_date" value="${c.date}" /></div>
+          <div class="form-group"><label>الوقت (, مفصولة)</label><input id="d_time" value="${c.time}" /></div>
+          <div class="form-group"><label>المدة (, مفصولة)</label><input id="d_duration" value="${c.duration}" /></div>
+          <div class="form-group"><label>التصنيف</label><input id="d_category" value="${c.category}" /></div>
+          <div class="form-group"><label>المكان</label><input id="d_place" value="${c.place}" /></div>
+          <div class="form-group"><label>الفئة المستهدفة</label><input id="d_target" value="${c.target}" /></div>
+          <div class="actions">
+            <button class="btn-submit" onclick="saveEditCourse()">حفظ</button>
+            <button class="btn-close" id="btnCloseEdit">إغلاق</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      // حفظ القيم الأصلية للمقارنة
+      const original = {
+        title: c.title,
+        description: c.description,
+        date: c.date,
+        time: c.time,
+        duration: c.duration,
+        category: c.category,
+        place: c.place,
+        target: c.target
+      };
+
+      // عند الضغط على زر الإغلاق
+      document.getElementById('btnCloseEdit').addEventListener('click', () => {
+        const current = {
+          title: document.getElementById('d_title').value.trim(),
+          description: document.getElementById('d_desc').value.trim(),
+          date: document.getElementById('d_date').value,
+          time: document.getElementById('d_time').value.trim(),
+          duration: document.getElementById('d_duration').value.trim(),
+          category: document.getElementById('d_category').value.trim(),
+          place: document.getElementById('d_place').value.trim(),
+          target: document.getElementById('d_target').value.trim()
+        };
+        // تحقق من وجود تعديل
+        const changed = Object.keys(original).some(key => original[key] !== current[key]);
+        if (changed) {
+          if (!confirm('هل أنت متأكد من ترك التعديلات دون حفظ؟')) return;
+        }
+        overlay.remove();
+      });
+    });
+  }
+  function saveEditCourse() {
+    const updates = {
+      title: document.getElementById('d_title').value.trim(),
+      description: document.getElementById('d_desc').value.trim(),
+      date: document.getElementById('d_date').value,
+      time: document.getElementById('d_time').value.trim(),
+      duration: document.getElementById('d_duration').value.trim(),
+      category: document.getElementById('d_category').value.trim(),
+      place: document.getElementById('d_place').value.trim(),
+      target: document.getElementById('d_target').value.trim()
+    };
+    firebase.database().ref('courses/' + currentEditId).update(updates).then(() => {
+      document.querySelector('.dialog-overlay').remove();
+      loadCurrentCourses();
+      alert('✅ تم حفظ التعديلات');
+    });
+  }
+  function deleteCourse(id) {
+    if (!confirm('هل أنت متأكد من حذف هذه الدورة؟')) return;
+    firebase.database().ref('courses/' + id).remove().then(loadCurrentCourses);
+  }
+
+  // —————————————————
+// 1) عرض القسم عند الضغط على "قائمة المدربين"
+document.getElementById('sec4').addEventListener('click', () => {
+  // إخفاء باقي الأقسام
+  ['dashboardSection','staffSection','uploadSection','currentSection'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  // إظهار جدول المدربين
+  document.getElementById('trainersSection').style.display = 'block';
+  loadTrainees();  // جلب البيانات
+});
+
+// 2) جلب البيانات من Firebase وعرضها في الجدول
+let trainersData = [];  // نخزنها للتصدير
+function loadTrainees() {
+  const tbody = document.querySelector('#trainersTable tbody');
+  tbody.innerHTML = '';
+  firebase.database().ref('trainees').once('value').then(snapshot => {
+    const data = snapshot.val() || {};
+    trainersData = [];  // تفريغ المصفوفة
+    Object.entries(data).forEach(([id, t]) => {
+      // نجمع السجل في مصفوفة
+      trainersData.push({ id, ...t });
+
+      // نبني صف الجدول
+      tbody.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td>${t.name}</td>
+          <td>${t.email}</td>
+          <td>${t.phone}</td>
+          <td>${t.nationalId}</td>
+          <td>${new Date(t.registeredAt).toLocaleString('ar-EG')}</td>
+          <td>${t.courseId}</td>
+          <td>${t.courseTitle}</td>
+          <td>${t.date}</td>
+          <td>${t.time}</td>
+          <td>${t.duration}</td>
+          <td>${t.category}</td>
+          <td>${t.place}</td>
+          <td>${t.target}</td>
+        </tr>
+      `);
+    });
+  });
+}
+
+// 3) زر تصدير البيانات إلى CSV
+document.getElementById('exportTrainersBtn').addEventListener('click', exportTrainers);
+async function exportTrainers() {
+  if (!trainersData.length) return alert('لا توجد بيانات للتصدير');
+
+  // 1) إنشاء مصفوفة الرؤوس
+  const headers = [
+    'الاسم', 'البريد الإلكتروني', 'الجوال', 'الهوية الوطنية',
+    'تاريخ التسجيل', 'معرّف الدورة', 'عنوان الدورة',
+    'التاريخ', 'الوقت', 'المدة', 'التصنيف', 'المكان', 'الفئة المستهدفة'
+  ];
+
+  // 2) تجهيز Workbook و Worksheet
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'لوحة المشرف';
+  workbook.created = new Date();
+  const sheet = workbook.addWorksheet('Trainers');
+
+  // 3) إضافة الصفوف
+  sheet.addRow(headers);
+  trainersData.forEach(t => {
+    sheet.addRow([
+      t.name,
+      t.email,
+      t.phone,
+      t.nationalId,
+      new Date(t.registeredAt).toLocaleString('ar-EG'),
+      t.courseId,
+      t.courseTitle,
+      t.date,
+      t.time,
+      t.duration,
+      t.category,
+      t.place,
+      t.target
+    ]);
+  });
+
+  // 4) تنسيق بسيط للرؤوس (عريض ومحاذاة مركز)
+  const headerRow = sheet.getRow(1);
+  headerRow.font = { bold: true };
+  headerRow.alignment = { horizontal: 'center' };
+
+  // 5) ضبط عرض الأعمدة تلقائياً
+  sheet.columns.forEach(col => {
+    let max = 10;
+    col.eachCell({ includeEmpty: true }, cell => {
+      const len = (cell.value || '').toString().length;
+      if (len > max) max = len;
+    });
+    col.width = max + 2;
+  });
+
+  // 6) تصدير الملف
+  const buf = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buf], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `trainers_${new Date().toISOString().slice(0,10)}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+{
+   "users": {
+  "id-1": {
+    "name": "مدير",
+    "password": "Abd123@Secure",
+    "type": "admin",
+    "powers": "all"
+  },
+  "id-2": {
+    "name": "موظف قسم التدريب",
+    "password": "Abd12343@fdr",
+    "type": "employee",
+    "powers": "sec1: read - sec2: read&write - sec3: hide - sec4: read - sec5: hide"
+  }
+},
+  "stats": {
+    "trainersCount": 12,
+    "coursesCount": 7
+  },
+  "courses": {
+    "course_1": {
+      "title": "ورشة مهارات التميز",
+      "description": "ورشة تدريبية لتطوير مهارات التميز المؤسسي.",
+      "date": "2025-07-05",
+      "time": "10:00,13:00,16:00",
+      "duration": "ساعتين",
+      "category": "تطوير ذاتي",
+      "place": "القاعة الرئيسية - جدة",
+      "target": "مدراء الإدارات",
+      "image": "https://via.placeholder.com/400x200.png?text=Course+Image",
+      "multiSlots": true
+    },
+    "course_2": {
+      "title": "دورة القيادة المؤسسية",
+      "description": "مفاهيم واستراتيجيات القيادة الحديثة.",
+      "date": "2025-07-10",
+      "time": "11:00",
+      "duration": "3 ساعات",
+      "category": "قيادة",
+      "place": "الرياض - قاعة B",
+      "target": "القياديون الجدد",
+      "image": "https://via.placeholder.com/400x200.png?text=Leadership+Course",
+      "multiSlots": false
+    }
+  }
+}
+ 
