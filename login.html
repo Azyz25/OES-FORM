@@ -148,7 +148,7 @@ html, body, * {
     const sessionData = JSON.parse(session);
     const now = Date.now();
     if (now - sessionData.timestamp <= 30 * 60 * 1000) {
-      window.location.href = "dashboard.html";
+      window.location.href = "Dashboard.html";
     } else {
       localStorage.removeItem("adminSession");
     }
