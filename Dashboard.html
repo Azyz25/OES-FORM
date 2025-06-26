@@ -368,6 +368,54 @@ html, body, * {
     direction: rtl;
     text-align: right;
   }
+
+  .dialog-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.dialog-box.large {
+  background: #fff;
+  border-radius: 12px;
+  width: 80vw;           /* 80% من عرض الشاشة */
+  max-width: 800px;
+  height: 80vh;          /* 80% من ارتفاع الشاشة */
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.dialog-box.large h3 {
+  margin: 0 0 10px;
+}
+
+.dialog-content {
+  flex: 1;
+  overflow-y: auto;      /* تمرير عمودي */
+  overflow-x: auto;      /* تمرير أفقي عند الكلمات الطويلة */
+  padding-right: 10px;    /* مساحة لسكрол بار */
+}
+
+.dialog-content p {
+  white-space: pre-wrap; /* يحافظ على فواصل الأسطر */
+  word-wrap: break-word; /* يكسر الكلمات الطويلة عند الضرورة */
+  margin: 0;
+}
+
+.dialog-actions {
+  text-align: center;
+  margin-top: 15px;
+}
+
   .dialog-box h3 {
     margin-top: 0;
     color: #2c3e50;
@@ -467,7 +515,19 @@ img.side-logo {
 }
 
 
+input#heroContactLinkInput {
+    border-radius: 25px;
+    border: 2px solid #dfdede;
+    height: 40px;
+}
 
+input#registerLinkInput{
+
+border-radius: 25px;
+    border: 2px solid #dfdede;
+    height: 40px;
+
+}
   </style>
 </head>
 <body>
@@ -479,6 +539,7 @@ img.side-logo {
         <li id="sec1">📊 الإحصائيات والتقارير</li>
         <li id="sec2">⬆️ رفع دورة جديدة</li>
         <li id="sec3">📚 الدورات الحالية</li>
+      <li id="sec6">🌐 صفحة الهبوط</li>
         <li id="sec4">👨‍🏫 قائمة المدربين</li>
         <li id="sec5">⚙️ الصلاحيات والموظفين</li>
       </ul>
@@ -555,6 +616,38 @@ img.side-logo {
   <h2>📚 الدورات الحالية</h2>
   <div id="currentContainer" class="course-container"></div>
 </div>
+
+
+    <div id="landingSection" style="display:none;">
+      <h2>🌐 صفحة الهبوط</h2>
+      <!-- Inputs to edit links -->
+      <div style="display:flex; gap:10px; margin-bottom:20px;flex-direction: column;align-items: center;">
+        <a>روابط ازرار صفحة الهبوط : تواصل معنا ، احجز مقعدك الان</a>
+                <input id="heroContactLinkInput" type="text" class="form-control" placeholder="رابط تواصل معنا في الهيرو">
+        <input id="registerLinkInput" type="text" class="form-control" placeholder="رابط احجز مقعدك الآن">
+        <button id="saveLandingLinksBtn" class="btn">حفظ الروابط</button>
+      </div>
+      <!-- Export button -->
+      <button id="exportLandingBtn" class="btn">📤 تصدير رسائل التواصل</button>
+      <div style="overflow-x:auto; margin-top:20px;">
+        <table id="landingTable">
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>البريد الإلكتروني</th>
+              <th>المدينة</th>
+              <th>التاريخ والوقت</th>
+              <th>اليوم</th>
+              <th>المتصفح</th>
+              <th>الجهاز</th>
+              <th>الرسالة</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
     
 <div id="trainersSection" style="display:none;">
   <h2>👨‍🏫 قائمة المدربين</h2>
@@ -607,60 +700,54 @@ function guardClick(e){
   showDialog();
 }
 
-// سكشنات السايدبار
-['sec1','sec2','sec3','sec4','sec5'].forEach(id => {
+// سكشنات السايدبار (شملنا sec6 الآن)
+['sec1','sec2','sec3','sec4','sec5','sec6'].forEach(id => {
   const li = document.getElementById(id);
-  if(!li) return;
-  if(perms[id] === 'hide'){
+  if (!li) return;
+  if (perms[id] === 'hide') {
     li.classList.add('disabled');
-    // تشيل الـ listener الأصلي لو ضفته قبل
     li.replaceWith(li.cloneNode(true));
     const newLi = document.getElementById(id);
     newLi.classList.add('disabled');
     newLi.addEventListener('click', guardClick);
   }
-  // إذا read&write، يظل كما هو
 });
+
 
   document.getElementById('sidebarUser').textContent = "يا هلا فيك " + sessionData.user;
 
-  // تبديل الأقسام
-  document.getElementById('sec1').addEventListener('click', () => {
-    document.getElementById('dashboardSection').style.display = 'block';
-    document.getElementById('staffSection').style.display    = 'none';
-    document.getElementById('uploadSection').style.display   = 'none';
-    document.getElementById('currentSection').style.display  = 'none';
-    document.getElementById('trainersSection').style.display = 'none';
-  });
-  document.getElementById('sec2').addEventListener('click', () => {
-    document.getElementById('uploadSection').style.display    = 'block';
-    document.getElementById('dashboardSection').style.display = 'none';
-    document.getElementById('staffSection').style.display     = 'none';
-    document.getElementById('currentSection').style.display   = 'none';
-    document.getElementById('trainersSection').style.display  = 'none';
-  });
-  document.getElementById('sec3').addEventListener('click', () => {
-    document.getElementById('uploadSection').style.display    = 'none';
-    document.getElementById('dashboardSection').style.display = 'none';
-    document.getElementById('staffSection').style.display     = 'none';
-    document.getElementById('currentSection').style.display   = 'block';
-    document.getElementById('trainersSection').style.display  = 'none';
-  });
-  document.getElementById('sec4').addEventListener('click', () => {
-    document.getElementById('uploadSection').style.display    = 'none';
-    document.getElementById('dashboardSection').style.display = 'none';
-    document.getElementById('staffSection').style.display     = 'none';
-    document.getElementById('currentSection').style.display   = 'none';
-    document.getElementById('trainersSection').style.display  = 'block';
-  });
-  document.getElementById('sec5').addEventListener('click', () => {
-    document.getElementById('dashboardSection').style.display = 'none';
-    document.getElementById('staffSection').style.display     = 'block';
-    document.getElementById('uploadSection').style.display    = 'none';
-    document.getElementById('currentSection').style.display   = 'none';
-    document.getElementById('trainersSection').style.display  = 'none';
-    loadUsers();
-  });
+// أولاً دالة تخفي كل السكشنات
+function hideAllSections() {
+  ['dashboardSection','uploadSection','currentSection','trainersSection','staffSection','landingSection']
+    .forEach(id => document.getElementById(id).style.display = 'none');
+}
+
+// بعدها اربط كل زر بالـ handler المناسب
+document.getElementById('sec1').addEventListener('click', () => {
+  hideAllSections();
+  document.getElementById('dashboardSection').style.display = 'block';
+});
+document.getElementById('sec2').addEventListener('click', () => {
+  hideAllSections();
+  document.getElementById('uploadSection').style.display = 'block';
+});
+document.getElementById('sec3').addEventListener('click', () => {
+  hideAllSections();
+  document.getElementById('currentSection').style.display = 'block';
+});
+document.getElementById('sec4').addEventListener('click', () => {
+  hideAllSections();
+  document.getElementById('trainersSection').style.display = 'block';
+});
+document.getElementById('sec5').addEventListener('click', () => {
+  hideAllSections();
+  document.getElementById('staffSection').style.display = 'block';
+});
+document.getElementById('sec6').addEventListener('click', () => {
+  hideAllSections();
+  document.getElementById('landingSection').style.display = 'block'; 
+});
+
 
   // إعداد Firebase
   const firebaseConfig = {
@@ -676,6 +763,7 @@ function guardClick(e){
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
+  loadLandingLinks();
   let trainersCount = 0;
   let totalPeriods  = 0;
   let busyCount     = 0;
@@ -837,13 +925,14 @@ function showAddUserDialog() {
   overlay.setAttribute('data-dialog', '');
 
   // أقسام النظام وعناوينها
-  const secs = ['sec1','sec2','sec3','sec4','sec5'];
+  const secs = ['sec1','sec2','sec3','sec4','sec5','sec6'];
   const titles = {
     sec1: 'الإحصائيات',
     sec2: 'رفع دورة',
     sec3: 'الدورات الحالية',
     sec4: 'قائمة المدربين',
-    sec5: 'الموظفين'
+    sec5: 'الموظفين',
+    sec6: 'صفحة الهبوط'
   };
 
   // توليد صفوف الجدول: رأس وعرض صلاحيات
@@ -919,7 +1008,7 @@ function showAddUserDialog() {
     db.ref("users").once("value").then(snap => {
       const users = snap.val() || {}, cont = document.getElementById("usersContainer");
       let html = '';
-      const mapName = { sec1:'الإحصائيات',sec2:'رفع دورة',sec3:'الدورات الحالية',sec4:'قائمة المدربين',sec5:'الموظفين و الصلاحيات' };
+      const mapName = { sec1:'الإحصائيات',sec2:'رفع دورة',sec3:'الدورات الحالية',sec4:'قائمة المدربين',sec5:'الموظفين و الصلاحيات',sec6:'صفحة الهبوط' };
       Object.entries(users).forEach(([id, u]) => {
         const rd = u.powers.split('-').map(p => mapName[p.trim().split(':')[0]]).join('، ');
         html += `
@@ -951,13 +1040,14 @@ function showAddUserDialog() {
   }
 
   function editUser(id) {
-  const secs = ['sec1','sec2','sec3','sec4','sec5'];
+  const secs = ['sec1','sec2','sec3','sec4','sec5','sec6'];
   const titles = {
     sec1: 'الإحصائيات',
     sec2: 'رفع دورة',
     sec3: 'الدورات الحالية',
     sec4: 'قائمة المدربين',
-    sec5: 'الموظفين'
+    sec5: 'الموظفين',
+    sec6: 'صفحة الهبوط'
   };
 
   db.ref("users/" + id).once("value").then(snap => {
@@ -1040,7 +1130,7 @@ function showAddUserDialog() {
     const name = document.getElementById('editName').value.trim();
     const type = document.getElementById('editType').value;
     let pws = '';
-    ['sec1','sec2','sec3','sec4','sec5'].forEach(s => {
+    ['sec1','sec2','sec3','sec4','sec5','sec6'].forEach(s => {
       const sel = document.querySelector(`input[name="power_${s}"]:checked`);
       pws += `${s}: ${sel ? sel.value : 'hide'} - `;
     });
@@ -1057,6 +1147,9 @@ document.getElementById('sec2').addEventListener('click', () => {
     document.getElementById('staffSection').style.display = 'none';
     document.getElementById('uploadSection').style.display = 'block';
   });
+
+ 
+  
 
   // إعداد تعدد الفترات
   const multiCheckbox = document.getElementById('courseMulti');
@@ -1349,6 +1442,158 @@ async function exportTrainers() {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
+ 
+
+  // helper to hide all sections
+  function hideAllSections() {
+    ['dashboardSection','staffSection','uploadSection','currentSection','trainersSection','landingSection']
+      .forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+  }
+
+  // when "صفحة الهبوط" tab is clicked
+  document.getElementById('sec6').addEventListener('click', () => {
+    hideAllSections();
+    document.getElementById('landingSection').style.display = 'block';
+    loadLandingMessages();
+  });
+
+  function showMessageDialog(msg) {
+  const overlay = document.createElement('div');
+  overlay.className = 'dialog-overlay';
+  overlay.innerHTML = `
+    <div class="dialog-box large">
+      <h3>تفاصيل الرسالة</h3>
+      <div class="dialog-content">
+        <p>${msg}</p>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-submit" onclick="this.closest('.dialog-overlay').remove()">إغلاق</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+// جلب روابط الأزرار من Firebase وعرضها في الحقول
+function loadLandingLinks() {
+  db.ref('siteLinks').once('value').then(snap => {
+    const data = snap.val() || {};
+    document.getElementById('heroContactLinkInput').value = data.heroContactLink || '';
+    document.getElementById('registerLinkInput').value   = data.registerLink   || '';
+  });
+}
+
+// حفظ الروابط عند الضغط على الزر
+document.getElementById('saveLandingLinksBtn').addEventListener('click', () => {
+  const heroLink     = document.getElementById('heroContactLinkInput').value.trim();
+  const registerLink = document.getElementById('registerLinkInput').value.trim();
+  db.ref('siteLinks').set({ heroContactLink: heroLink, registerLink: registerLink })
+    .then(() => alert('✅ تم حفظ روابط صفحة الهبوط!'))
+    .catch(err => alert('❌ خطأ في الحفظ: ' + err.message));
+});
+
+  // تحميل الرسائل مع زر العرض
+  function loadLandingMessages() {
+    const tbody = document.querySelector('#landingTable tbody');
+    tbody.innerHTML = '';
+    db.ref('contactMessages').once('value').then(snap => {
+      const msgs = snap.val() || {};
+      landingData = [];
+      Object.values(msgs).forEach(msg => {
+        landingData.push(msg);
+        // زر “عرض” داخل خلية الرسالة
+        tbody.insertAdjacentHTML('beforeend', `
+          <tr>
+            <td>${msg.name}</td>
+            <td>${msg.email}</td>
+            <td>${msg.city}</td>
+            <td>${msg.dateTime}</td>
+            <td>${msg.day}</td>
+            <td>${msg.browser}</td>
+            <td>${msg.device}</td>
+            <td>
+              <button class="btn" data-msg="${encodeURIComponent(msg.message)}">عرض</button>
+            </td>
+          </tr>
+        `);
+      });
+
+      // ربط حدث النقر لكل زر
+      tbody.querySelectorAll('button[data-msg]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const text = decodeURIComponent(btn.getAttribute('data-msg'));
+          showMessageDialog(text);
+        });
+      });
+    });
+  }
+
+  // بعد تحميل الرسائل في landingData، نصدرها إلى إكسل
+document.getElementById('exportLandingBtn').addEventListener('click', async () => {
+  if (!landingData || !landingData.length) {
+    return alert('ما فيه بيانات للتصدير');
+  }
+
+  // 1) أنشئ Workbook و Worksheet
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'لوحة المشرف';
+  workbook.created = new Date();
+  const sheet = workbook.addWorksheet('Landing Messages');
+
+  // 2) أضف رؤوس الأعمدة
+  sheet.addRow([
+    'الاسم',
+    'البريد الإلكتروني',
+    'المدينة',
+    'التاريخ والوقت',
+    'اليوم',
+    'المتصفح',
+    'الجهاز',
+    'الرسالة'
+  ]).font = { bold: true };
+
+  // 3) أضف البيانات
+  landingData.forEach(msg => {
+    sheet.addRow([
+      msg.name,
+      msg.email,
+      msg.city,
+      msg.dateTime,
+      msg.day,
+      msg.browser,
+      msg.device,
+      msg.message
+    ]);
+  });
+
+  // 4) ضبط عرض الأعمدة تلقائيًا
+  sheet.columns.forEach(col => {
+    let max = 10;
+    col.eachCell({ includeEmpty: true }, cell => {
+      const len = (cell.value || '').toString().length;
+      if (len > max) max = len;
+    });
+    col.width = max + 2;
+  });
+
+  // 5) توليد ملف الـ XLSX وتنزيله
+  const buf = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buf], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `landing_messages_${new Date().toISOString().slice(0,10)}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
 
 </script>
 </body>
