@@ -579,10 +579,8 @@ border-radius: 25px;
       <label for="courseDesc">وصف الدورة</label>
       <textarea id="courseDesc" rows="3" required></textarea>
     </div>
-    <div class="form-group">
-      <label for="courseDate">تاريخ الدورة</label>
-      <input type="date" id="courseDate" required>
-    </div>
+  
+    <div id="datesContainer"></div>
     <div class="slots-config">
       <label><input type="checkbox" id="courseMulti"> أكثر من فترة</label>
       <input type="number" id="slotsCount" placeholder="عدد الفترات" min="2" style="width:120px; display:none;">
@@ -1155,6 +1153,76 @@ document.getElementById('sec2').addEventListener('click', () => {
   const multiCheckbox = document.getElementById('courseMulti');
   const slotsCountInput = document.getElementById('slotsCount');
   const slotsContainer = document.getElementById('slotsContainer');
+  const datesContainer  = document.getElementById('datesContainer');
+const mainDateInput   = document.getElementById('courseDate');
+slotsContainer.innerHTML = singleSlotMarkup(1);
+// دالة ترجع الـ HTML لبوكس فترة رقم idx
+function singleSlotMarkup(idx) {
+  return `
+    <div class="slot-group">
+      <label>تاريخ الفترة ${idx}</label>
+      <input type="date" class="slotDate" required>
+      <label>الوقت ${idx}</label>
+      <input type="time" class="slotTime" required>
+      <label>المدة ${idx}</label>
+      <input type="text" class="slotDuration" placeholder="مثال: ساعتين" required>
+    </div>`;
+}
+
+// لما يتغير التشيك بوكس
+multiCheckbox.addEventListener('change', () => {
+  slotsCountInput.style.display = multiCheckbox.checked ? 'inline-block' : 'none';
+  // لو رجعنا لفترة واحدة
+  if (!multiCheckbox.checked) {
+    slotsContainer.innerHTML = singleSlotMarkup(1);
+  }
+});
+
+// لما يدخل المستخدم عدد الفترات
+slotsCountInput.addEventListener('input', () => {
+  const n = parseInt(slotsCountInput.value) || 1;
+  slotsContainer.innerHTML = '';
+  for (let i = 1; i <= n; i++) {
+    slotsContainer.innerHTML += singleSlotMarkup(i);
+  }
+});
+
+
+
+multiCheckbox.addEventListener('change', () => {
+  slotsCountInput.style.display = multiCheckbox.checked ? 'inline-block' : 'none';
+  if (!multiCheckbox.checked) {
+    slotsContainer.innerHTML = document.querySelector('.slot-group').outerHTML;
+    datesContainer.innerHTML   = '';
+  }
+});
+
+// عند تغيير عدد الفترات
+slotsCountInput.addEventListener('input', () => {
+  const n = parseInt(slotsCountInput.value) || 1;
+
+  // حقول الوقت والمدة
+  slotsContainer.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    slotsContainer.innerHTML += `
+      <div class="slot-group">
+        <label>الوقت ${i+1}</label>
+        <input type="time" class="slotTime" required>
+        <label>المدة ${i+1}</label>
+        <input type="text" class="slotDuration" placeholder="مثال: ساعتين" required>
+      </div>`;
+  }
+
+  // حقول التواريخ
+  datesContainer.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    datesContainer.innerHTML += `
+      <div class="form-group">
+        <label>تاريخ الفترة ${i+1}</label>
+        <input type="date" class="slotDate" required>
+      </div>`;
+  }
+});
   multiCheckbox.addEventListener('change', () => {
     slotsCountInput.style.display = multiCheckbox.checked ? 'inline-block' : 'none';
     if (!multiCheckbox.checked) {
