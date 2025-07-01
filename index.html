@@ -342,77 +342,76 @@ input#nationalId {
   const dates = course.date.split(",").map(d => d.trim());
   const times = course.time.split(",").map(t => t.trim());
 
-  // جلب المتدربين المحجوزين
+  // 1) جلب كل الفترات المحجوزة
   const snap = await get(ref(db, "trainees"));
   const all = snap.exists() ? Object.values(snap.val()) : [];
-  const takenSlots = all
-    .filter(t => t.courseId === course.id)
-    .map(t => `${t.date}_${t.time}`);
+  const takenSlots = new Set(
+    all
+      .filter(t => t.courseId === course.id)
+      .map(t => `${t.date}_${t.time}`)
+  );
 
-  // 🗓️ بوكسات التواريخ
+  let selectedDateIndex = null;
+
+  // 2) أبني بوكسات التواريخ
   const datesDiv = document.createElement("div");
   datesDiv.style.marginBottom = "20px";
   datesDiv.innerHTML = `<h4>اختر التاريخ</h4>`;
-  dates.forEach((date) => {
+  dates.forEach((date, i) => {
     const box = document.createElement("div");
     box.className = "period-box";
     box.textContent = date;
+    box.dataset.index = i;
 
-    // تحقق إذا كل أوقات هالتاريخ محجوزة
-    const allTimesTaken = times.every(time => takenSlots.includes(`${date}_${time}`));
-    if (allTimesTaken) {
-      box.style.backgroundColor = "#ccc"; // لون رمادي غامق شوي
-      box.style.opacity = "0.7";
-      box.style.cursor = "not-allowed";
+    // لو هذه الفترة (date+time) محجوزة
+    if (takenSlots.has(`${date}_${times[i]}`)) {
       box.classList.add("disabled");
     }
 
-    box.onclick = () => {
+    box.addEventListener("click", () => {
       if (box.classList.contains("disabled")) return;
-
-      selectedDate = date;
+      // حدد التاريخ
+      selectedDateIndex = i;
+      // ظلّل الـ date-box المختار
       datesDiv.querySelectorAll(".period-box")
-              .forEach(b => b.classList.remove("selected"));
+        .forEach(b => b.classList.remove("selected"));
       box.classList.add("selected");
 
-      // عند اختيار التاريخ: فعل أوقاته فقط
-      timesDiv.querySelectorAll(".period-box").forEach((timeBox) => {
-        const time = timeBox.textContent.trim();
-        const slotKey = `${selectedDate}_${time}`;
-
-        // إذا الوقت مرتبط بالتاريخ ومب محجوز
-        if (dates.includes(selectedDate)) {
-          if (takenSlots.includes(slotKey)) {
-            timeBox.classList.add("disabled");
-          } else {
-            timeBox.classList.remove("disabled");
-          }
+      // فعل/عطّل الأوقات بناءً على الفهرس
+      timesDiv.querySelectorAll(".period-box").forEach(tb => {
+        const ti = parseInt(tb.dataset.index, 10);
+        // لو نفس الفهرس ولم يكن محجوز
+        if (ti === selectedDateIndex && !takenSlots.has(`${date}_${times[ti]}`)) {
+          tb.classList.remove("disabled");
         } else {
-          timeBox.classList.add("disabled");
+          tb.classList.add("disabled");
+          tb.classList.remove("selected");
         }
       });
-    };
+    });
 
     datesDiv.appendChild(box);
   });
   periodsGrid.appendChild(datesDiv);
 
-  // 🕐 بوكسات الأوقات
+  // 3) أبني بوكسات الأوقات (مقفلة بالبداية)
   const timesDiv = document.createElement("div");
   timesDiv.innerHTML = `<h4>اختر الوقت</h4>`;
-  times.forEach((time) => {
+  times.forEach((time, i) => {
     const box = document.createElement("div");
-    box.className = "period-box disabled"; // بالبداية مقفل
+    box.className = "period-box disabled";
     box.textContent = time;
+    box.dataset.index = i;
 
-    box.onclick = () => {
+    box.addEventListener("click", () => {
+      // لا تفعّل إلا لو هذا الـ box مفتوح
       if (box.classList.contains("disabled")) return;
-
-      selectedPeriod = time;
+      // ظلّل الـ time-box المختار
       timesDiv.querySelectorAll(".period-box")
-              .forEach(b => b.classList.remove("selected"));
+        .forEach(b => b.classList.remove("selected"));
       box.classList.add("selected");
-    };
+      selectedPeriod = time;
+    });
 
     timesDiv.appendChild(box);
   });
