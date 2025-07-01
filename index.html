@@ -375,45 +375,52 @@ async function renderPeriods(course) {
       box.classList.add("selected");
 
       // عند اختيار التاريخ حدّث الأوقات
-      timesDiv.querySelectorAll(".period-box").forEach((timeBox, i) => {
-        const time = times[i];
-        const slotKey = `${selectedDate}_${time}`;
-        if (takenSlots.includes(slotKey)) {
-          timeBox.classList.add("disabled");
-        } else {
-          timeBox.classList.remove("disabled");
-        }
-      });
+      renderTimesForDate(date);
     };
 
     datesDiv.appendChild(box);
   });
   periodsGrid.appendChild(datesDiv);
 
-  // 🕐 بوكسات الأوقات
+  // 🕐 بوكسات الأوقات (تُعرض بعد اختيار التاريخ)
   const timesDiv = document.createElement("div");
   timesDiv.innerHTML = `<h4>اختر الوقت</h4>`;
-  times.forEach((time, i) => {
-    const box = document.createElement("div");
-    box.className = "period-box disabled"; // بالبداية مقفل
-    box.textContent = time;
-
-    box.onclick = () => {
-      if (box.classList.contains("disabled")) return;
-
-      selectedPeriod = time;
-      timesDiv.querySelectorAll(".period-box")
-              .forEach(b => b.classList.remove("selected"));
-      box.classList.add("selected");
-    };
-
-    timesDiv.appendChild(box);
-  });
   periodsGrid.appendChild(timesDiv);
+
+  function renderTimesForDate(date) {
+    timesDiv.innerHTML = `<h4>اختر الوقت</h4>`; // يعيد العنوان
+
+    times.forEach((time) => {
+      const slotKey = `${date}_${time}`;
+      const box = document.createElement("div");
+      box.className = "period-box";
+      box.textContent = time;
+
+      if (!dates.includes(date)) {
+        box.classList.add("disabled");
+      }
+
+      // إذا الفترة محجوزة
+      if (takenSlots.includes(slotKey)) {
+        box.classList.add("disabled");
+      }
+
+      box.onclick = () => {
+        if (box.classList.contains("disabled")) return;
+
+        selectedPeriod = time;
+        timesDiv.querySelectorAll(".period-box")
+                .forEach(b => b.classList.remove("selected"));
+        box.classList.add("selected");
+      };
+
+      timesDiv.appendChild(box);
+    });
+  }
 }
 
 
-
+  
   // 7) عند الإرسال نحفظ السجل فقط في trainees ثم نعيد تحميل الكورسات
   form.addEventListener("submit", async e => {
     e.preventDefault();
