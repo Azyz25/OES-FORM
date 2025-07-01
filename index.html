@@ -334,50 +334,52 @@ input#nationalId {
     modal.style.display = "flex";
   }
 
-let selectedDateIndex = null;
-
 async function renderPeriods(course) {
   periodsGrid.innerHTML = "";
 
-  const dates = course.date.split(",").map(d=>d.trim());
-  const times = course.time.split(",").map(t=>t.trim());
+  const dates = course.date.split(",").map(d => d.trim());
+  const times = course.time.split(",").map(t => t.trim());
 
-  // جلب المحجوزات
+  // 1) جلب كل الفترات المحجوزة
   const snap = await get(ref(db, "trainees"));
   const all = snap.exists() ? Object.values(snap.val()) : [];
-  const takenSlots = new Set(all
-    .filter(t=>t.courseId===course.id)
-    .map(t=>`${t.date}_${t.time}`));
+  const takenSlots = new Set(
+    all
+      .filter(t => t.courseId === course.id)
+      .map(t => `${t.date}_${t.time}`)
+  );
 
-  // 1) بوكسات التواريخ
+  let selectedDateIndex = null;
+
+  // 2) أبني بوكسات التواريخ
   const datesDiv = document.createElement("div");
-  datesDiv.innerHTML = `<h4>اختر التاريخ</h4>`;
   datesDiv.style.marginBottom = "20px";
-
-  dates.forEach((date,i) => {
+  datesDiv.innerHTML = `<h4>اختر التاريخ</h4>`;
+  dates.forEach((date, i) => {
     const box = document.createElement("div");
     box.className = "period-box";
     box.textContent = date;
+    box.dataset.index = i;
 
-    // لو كل الأوقات محجوزة لهذا التاريخ
-    const allTimesTaken = times.every(time=>takenSlots.has(`${date}_${time}`));
-    if (allTimesTaken) box.classList.add("disabled");
+    // لو هذه الفترة (date+time) محجوزة
+    if (takenSlots.has(`${date}_${times[i]}`)) {
+      box.classList.add("disabled");
+    }
 
     box.addEventListener("click", () => {
       if (box.classList.contains("disabled")) return;
-      // خزّن التاريخ
-      selectedDate = date;
+      // حدد التاريخ
       selectedDateIndex = i;
-
-      // ظلّل التاريخ
+      // ظلّل الـ date-box المختار
       datesDiv.querySelectorAll(".period-box")
-        .forEach(b=>b.classList.remove("selected"));
+        .forEach(b => b.classList.remove("selected"));
       box.classList.add("selected");
 
-      // فعّل/عطّل الأوقات المناسبة
-      timesDiv.querySelectorAll(".period-box").forEach((tb,j) => {
-        const key = `${selectedDate}_${times[j]}`;
-        if (j === selectedDateIndex && !takenSlots.has(key)) {
+      // فعل/عطّل الأوقات بناءً على الفهرس
+      timesDiv.querySelectorAll(".period-box").forEach(tb => {
+        const ti = parseInt(tb.dataset.index, 10);
+        // لو نفس الفهرس ولم يكن محجوز
+        if (ti === selectedDateIndex && !takenSlots.has(`${date}_${times[ti]}`)) {
           tb.classList.remove("disabled");
         } else {
           tb.classList.add("disabled");
@@ -390,21 +392,23 @@ async function renderPeriods(course) {
   });
   periodsGrid.appendChild(datesDiv);
 
-  // 2) بوكسات الأوقات (مقفلة بالبداية)
+  // 3) أبني بوكسات الأوقات (مقفلة بالبداية)
   const timesDiv = document.createElement("div");
   timesDiv.innerHTML = `<h4>اختر الوقت</h4>`;
-
-  times.forEach((time,j) => {
+  times.forEach((time, i) => {
     const box = document.createElement("div");
     box.className = "period-box disabled";
     box.textContent = time;
+    box.dataset.index = i;
 
     box.addEventListener("click", () => {
+      // لا تفعّل إلا لو هذا الـ box مفتوح
       if (box.classList.contains("disabled")) return;
-      selectedPeriod = time;
+      // ظلّل الـ time-box المختار
       timesDiv.querySelectorAll(".period-box")
-        .forEach(b=>b.classList.remove("selected"));
+        .forEach(b => b.classList.remove("selected"));
       box.classList.add("selected");
+      selectedPeriod = time;
     });
 
     timesDiv.appendChild(box);
