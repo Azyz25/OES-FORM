@@ -313,7 +313,6 @@ input#nationalId {
 
 
 
-  // 6) ارسم الفترات وجرب تعطل اللي محجوزة
 async function renderPeriods(course) {
   periodsGrid.innerHTML = "";
 
@@ -327,9 +326,13 @@ async function renderPeriods(course) {
     .filter(t => t.courseId === course.id)
     .map(t => `${t.date}_${t.time}`);
 
-  // بوكسات التواريخ
+  // 🟢 بوكسات التواريخ
   const datesDiv = document.createElement("div");
-  datesDiv.innerHTML = `<h4>اختر التاريخ</h4>`;
+  datesDiv.style.width = "100%";
+  datesDiv.innerHTML = `<h4>اختر التاريخ</h4>
+  <div class="grid-periods"></div>`;
+  const datesGrid = datesDiv.querySelector(".grid-periods");
+
   dates.forEach((date) => {
     const box = document.createElement("div");
     box.className = "period-box";
@@ -337,18 +340,22 @@ async function renderPeriods(course) {
 
     box.onclick = () => {
       selectedDate = date;
-      datesDiv.querySelectorAll(".period-box")
+      datesGrid.querySelectorAll(".period-box")
               .forEach(b => b.classList.remove("selected"));
       box.classList.add("selected");
     };
 
-    datesDiv.appendChild(box);
+    datesGrid.appendChild(box);
   });
   periodsGrid.appendChild(datesDiv);
 
-  // بوكسات الأوقات
+  // 🟢 بوكسات الأوقات
   const timesDiv = document.createElement("div");
-  timesDiv.innerHTML = `<h4>اختر الوقت</h4>`;
+  timesDiv.style.width = "100%";
+  timesDiv.innerHTML = `<h4>اختر الوقت</h4>
+  <div class="grid-periods"></div>`;
+  const timesGrid = timesDiv.querySelector(".grid-periods");
+
   times.forEach((time) => {
     const box = document.createElement("div");
     box.className = "period-box";
@@ -361,12 +368,12 @@ async function renderPeriods(course) {
       }
 
       selectedPeriod = time;
-      timesDiv.querySelectorAll(".period-box")
+      timesGrid.querySelectorAll(".period-box")
               .forEach(b => b.classList.remove("selected"));
       box.classList.add("selected");
     };
 
-    timesDiv.appendChild(box);
+    timesGrid.appendChild(box);
   });
   periodsGrid.appendChild(timesDiv);
 }
