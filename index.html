@@ -323,19 +323,11 @@ input#nationalId {
 
   selectedDate = null;
 
-
-
 async function renderPeriods(course) {
   periodsGrid.innerHTML = "";
 
   const dates = course.date.split(",").map(d => d.trim());
   const times = course.time.split(",").map(t => t.trim());
-
-  // 🟢 نجهز المصفوفة المربوطة
-  const dateTimeMap = dates.map((date, i) => ({
-    date,
-    time: times[i] || ""
-  }));
 
   // جلب المتدربين المحجوزين
   const snap = await get(ref(db, "trainees"));
@@ -344,67 +336,59 @@ async function renderPeriods(course) {
     .filter(t => t.courseId === course.id)
     .map(t => `${t.date}_${t.time}`);
 
-  // 🟢 بوكسات التواريخ
+  let selectedDate = null;
+
+  // بوكسات التواريخ
   const datesDiv = document.createElement("div");
-  datesDiv.style.width = "100%";
-  datesDiv.innerHTML = `<h4>اختر التاريخ</h4>
-  <div class="grid-periods"></div>`;
-  const datesGrid = datesDiv.querySelector(".grid-periods");
-
-  // 🟢 بوكسات الأوقات
-  const timesDiv = document.createElement("div");
-  timesDiv.style.width = "100%";
-  timesDiv.innerHTML = `<h4>اختر الوقت</h4>
-  <div class="grid-periods"></div>`;
-  const timesGrid = timesDiv.querySelector(".grid-periods");
-
-  // 🟢 عند اختيار تاريخ نحدث الأوقات
-  function updateTimes(selected) {
-    timesGrid.innerHTML = "";
-    const match = dateTimeMap.find(dt => dt.date === selected);
-    if (!match) return;
-
-    const slotKey = `${match.date}_${match.time}`;
-    const isTaken = takenSlots.includes(slotKey);
-
-    const box = document.createElement("div");
-    box.className = "period-box";
-    box.textContent = match.time;
-
-    if (isTaken) {
-      box.classList.add("disabled");
-    } else {
-      box.onclick = () => {
-        selectedPeriod = match.time;
-        timesGrid.querySelectorAll(".period-box")
-                .forEach(b => b.classList.remove("selected"));
-        box.classList.add("selected");
-      };
-    }
-
-    timesGrid.appendChild(box);
-  }
-
-  // 🟢 أنشئ بوكسات التواريخ
-  dateTimeMap.forEach(({ date }) => {
+  datesDiv.innerHTML = `<h4>اختر التاريخ</h4>`;
+  dates.forEach((date) => {
     const box = document.createElement("div");
     box.className = "period-box";
     box.textContent = date;
 
     box.onclick = () => {
       selectedDate = date;
-      datesGrid.querySelectorAll(".period-box")
+      datesDiv.querySelectorAll(".period-box")
               .forEach(b => b.classList.remove("selected"));
       box.classList.add("selected");
 
-      // 🟢 عند اختيار تاريخ نعرض أوقاته
-      updateTimes(date);
+      // بعد اختيار التاريخ فعل الاوقات المناسبة
+      timesDiv.querySelectorAll(".period-box").forEach(timeBox => {
+        const time = timeBox.getAttribute("data-time");
+        const slotKey = `${selectedDate}_${time}`;
+
+        if (takenSlots.includes(slotKey)) {
+          timeBox.classList.add("disabled");
+        } else {
+          timeBox.classList.remove("disabled");
+        }
+      });
     };
 
-    datesGrid.appendChild(box);
+    datesDiv.appendChild(box);
   });
-
   periodsGrid.appendChild(datesDiv);
+
+  // بوكسات الأوقات
+  const timesDiv = document.createElement("div");
+  timesDiv.innerHTML = `<h4>اختر الوقت</h4>`;
+  times.forEach((time) => {
+    const box = document.createElement("div");
+    box.className = "period-box disabled"; // بالبداية مقفلة
+    box.setAttribute("data-time", time);
+    box.textContent = time;
+
+    box.onclick = () => {
+      if (box.classList.contains("disabled")) return;
+
+      selectedPeriod = time;
+      timesDiv.querySelectorAll(".period-box")
+              .forEach(b => b.classList.remove("selected"));
+      box.classList.add("selected");
+    };
+
+    timesDiv.appendChild(box);
+  });
   periodsGrid.appendChild(timesDiv);
 }
 
