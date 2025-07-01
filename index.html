@@ -334,82 +334,91 @@ input#nationalId {
     modal.style.display = "flex";
   }
 
+let selectedDateIndex = null;
+
 async function renderPeriods(course) {
   periodsGrid.innerHTML = "";
 
-  const dates = course.date.split(",").map(d => d.trim());
-  const times = course.time.split(",").map(t => t.trim());
+  const dates = course.date.split(",").map(d=>d.trim());
+  const times = course.time.split(",").map(t=>t.trim());
 
-  // جلب المتدربين المحجوزين
+  // جلب المحجوزات
   const snap = await get(ref(db, "trainees"));
   const all = snap.exists() ? Object.values(snap.val()) : [];
-  const takenSlots = all
-    .filter(t => t.courseId === course.id)
-    .map(t => `${t.date}_${t.time}`);
+  const takenSlots = new Set(all
+    .filter(t=>t.courseId===course.id)
+    .map(t=>`${t.date}_${t.time}`));
 
-  // 🗓️ بوكسات التواريخ
+  // 1) بوكسات التواريخ
   const datesDiv = document.createElement("div");
-  datesDiv.style.marginBottom = "20px";
   datesDiv.innerHTML = `<h4>اختر التاريخ</h4>`;
-  dates.forEach((date) => {
+  datesDiv.style.marginBottom = "20px";
+
+  dates.forEach((date,i) => {
     const box = document.createElement("div");
     box.className = "period-box";
     box.textContent = date;
 
-    box.onclick = () => {
+    // لو كل الأوقات محجوزة لهذا التاريخ
+    const allTimesTaken = times.every(time=>takenSlots.has(`${date}_${time}`));
+    if (allTimesTaken) box.classList.add("disabled");
+
+    box.addEventListener("click", () => {
+      if (box.classList.contains("disabled")) return;
+      // خزّن التاريخ
       selectedDate = date;
+      selectedDateIndex = i;
+
+      // ظلّل التاريخ
       datesDiv.querySelectorAll(".period-box")
-              .forEach(b => b.classList.remove("selected"));
+        .forEach(b=>b.classList.remove("selected"));
       box.classList.add("selected");
 
-      // عند اختيار التاريخ حدّث الأوقات
-      timesDiv.querySelectorAll(".period-box").forEach((timeBox, i) => {
-        const time = times[i];
-        const slotKey = `${selectedDate}_${time}`;
-        if (dates[i] === selectedDate) {
-          // إذا هذا الوقت مربوط بالتاريخ ومب محجوز
-          if (takenSlots.includes(slotKey)) {
-            timeBox.classList.add("disabled");
-          } else {
-            timeBox.classList.remove("disabled");
-          }
+      // فعّل/عطّل الأوقات المناسبة
+      timesDiv.querySelectorAll(".period-box").forEach((tb,j) => {
+        const key = `${selectedDate}_${times[j]}`;
+        if (j === selectedDateIndex && !takenSlots.has(key)) {
+          tb.classList.remove("disabled");
         } else {
-          timeBox.classList.add("disabled");
+          tb.classList.add("disabled");
+          tb.classList.remove("selected");
         }
       });
-    };
+    });
 
     datesDiv.appendChild(box);
   });
   periodsGrid.appendChild(datesDiv);
 
-  // 🕐 بوكسات الأوقات
+  // 2) بوكسات الأوقات (مقفلة بالبداية)
   const timesDiv = document.createElement("div");
   timesDiv.innerHTML = `<h4>اختر الوقت</h4>`;
-  times.forEach((time, i) => {
+
+  times.forEach((time,j) => {
     const box = document.createElement("div");
-    box.className = "period-box disabled"; // بالبداية مقفل
+    box.className = "period-box disabled";
     box.textContent = time;
 
-    box.onclick = () => {
+    box.addEventListener("click", () => {
       if (box.classList.contains("disabled")) return;
-
       selectedPeriod = time;
       timesDiv.querySelectorAll(".period-box")
-              .forEach(b => b.classList.remove("selected"));
+        .forEach(b=>b.classList.remove("selected"));
       box.classList.add("selected");
-    };
+    });
 
     timesDiv.appendChild(box);
   });
   periodsGrid.appendChild(timesDiv);
 }
 
+
+  
   // 7) عند الإرسال نحفظ السجل فقط في trainees ثم نعيد تحميل الكورسات
   form.addEventListener("submit", async e => {
-    e.preventDefault();
-    if (!selectedDate) return alert("الرجاء اختيار التاريخ.");
-    if (!selectedPeriod) return alert("الرجاء اختيار فترة.");
+  e.preventDefault();
+  if (!selectedDate)     return alert("الرجاء اختيار التاريخ.");
+  if (!selectedPeriod)   return alert("الرجاء اختيار فترة.");
 
     
   const snap = await get(ref(db, "trainees"));
