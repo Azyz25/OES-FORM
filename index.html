@@ -318,34 +318,43 @@ document.getElementById("selectedDate").addEventListener("change", (e) => {
 
 
   // 6) ارسم الفترات وجرب تعطل اللي محجوزة
-  async function renderPeriods(course) {
-    periodsGrid.innerHTML = "";
+ async function renderPeriods(course) {
+  periodsGrid.innerHTML = "";
 
-    // نجيب كل المتدربين ونسوي فلتر على courseId
-    const snap = await get(ref(db, "trainees"));
-    const all = snap.exists() ? Object.values(snap.val()) : [];
-    const takenTimes = all
-      .filter(t => t.courseId === course.id)
-      .map(t => t.time);
+  const dates = course.date.split(",").map(d => d.trim());
+  const times = course.time.split(",").map(t => t.trim());
 
-    // ننشئ الفترات
-    course.time.split(",").map(t => t.trim()).forEach(time => {
-      const box = document.createElement("div");
-      box.className = "period-box";
-      box.textContent = time;
-      if (takenTimes.includes(time)) {
-        box.classList.add("disabled");
-      } else {
-        box.onclick = () => {
-          selectedPeriod = time;
-          document.querySelectorAll(".period-box")
-                  .forEach(b => b.classList.remove("selected"));
-          box.classList.add("selected");
-        };
-      }
-      periodsGrid.appendChild(box);
-    });
-  }
+  // جلب المتدربين المحجوزين
+  const snap = await get(ref(db, "trainees"));
+  const all = snap.exists() ? Object.values(snap.val()) : [];
+  const takenSlots = all
+    .filter(t => t.courseId === course.id)
+    .map(t => `${t.date}_${t.time}`);
+
+  // بناء البوكسات
+  dates.forEach((date, i) => {
+    const time = times[i] || "";
+    const slotKey = `${date}_${time}`;
+
+    const box = document.createElement("div");
+    box.className = "period-box";
+    box.textContent = `${date} ${time}`;
+
+    if (takenSlots.includes(slotKey)) {
+      box.classList.add("disabled");
+    } else {
+      box.onclick = () => {
+        selectedPeriod = time;
+        selectedDate = date;
+        document.querySelectorAll(".period-box")
+                .forEach(b => b.classList.remove("selected"));
+        box.classList.add("selected");
+      };
+    }
+
+    periodsGrid.appendChild(box);
+  });
+}
 
   // 7) عند الإرسال نحفظ السجل فقط في trainees ثم نعيد تحميل الكورسات
   form.addEventListener("submit", async e => {
