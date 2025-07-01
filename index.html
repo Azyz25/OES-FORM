@@ -78,14 +78,26 @@ html, body, * {
       align-items: center;
       z-index: 999;
     }
-    .modal-content {
-      background: white;
-      padding: 1rem;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
-      position: relative;
-    }
+  .modal-content {
+  background: white;
+  padding: 1rem;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  overflow-y: auto; /* يخليه scroll اذا صار طويل */
+  max-height: 90vh; /* يحدد الطول الأقصى */
+}
+
+/* للشاشات الكبيرة */
+@media (min-width: 1024px) {
+  .modal-content {
+    max-width: 700px; /* أو أي حجم يناسب عرض اللابتوب */
+    display: flex;
+    flex-direction: column;
+  }
+}
+
     .modal-content .close-btn {
       position: absolute;
       top: 10px;
