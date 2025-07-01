@@ -334,15 +334,13 @@ input#nationalId {
     modal.style.display = "flex";
   }
 
-
-
 async function renderPeriods(course) {
   periodsGrid.innerHTML = "";
 
   const dates = course.date.split(",").map(d => d.trim());
   const times = course.time.split(",").map(t => t.trim());
 
-  // 1) جلب جميع الفترات المحجوزة لـ this course
+  // 1) جلب جميع الفترات المحجوزة
   const snap = await get(ref(db, "trainees"));
   const all = snap.exists() ? Object.values(snap.val()) : [];
   const takenSlots = new Set(
@@ -362,14 +360,15 @@ async function renderPeriods(course) {
     box.textContent = date;
     box.dataset.index = i;
 
-    // إذا كل الأوقات الخاصة بهذا التاريخ محجوزة → قفله
-    const allTaken = times.every(t => takenSlots.has(`${date}_${t}`));
-    if (allTaken) box.classList.add("disabled");
+    // تعطيل صندوق التاريخ إذا كانت الفعالية عند هذا الفهرس محجوزة
+    if (takenSlots.has(`${date}_${times[i]}`)) {
+      box.classList.add("disabled");
+    }
 
     box.addEventListener("click", () => {
       if (box.classList.contains("disabled")) return;
 
-      // خزّن التاريخ فعلياً
+      // خزن التاريخ المختار
       selectedDate = date;
 
       // ظلّل التاريخ المختار
@@ -377,11 +376,10 @@ async function renderPeriods(course) {
         .forEach(b => b.classList.remove("selected"));
       box.classList.add("selected");
 
-      // فعّل/عطّل أوقات هذا التاريخ فقط
+      // فعل/عطّل أوقات هذا التاريخ فقط
       timesDiv.querySelectorAll(".period-box").forEach(tb => {
         const ti = parseInt(tb.dataset.index, 10);
-        const key = `${selectedDate}_${times[ti]}`;
-        if (ti === i && !takenSlots.has(key)) {
+        if (ti === i && !takenSlots.has(`${date}_${times[ti]}`)) {
           tb.classList.remove("disabled");
         } else {
           tb.classList.add("disabled");
@@ -392,6 +390,7 @@ async function renderPeriods(course) {
 
     datesDiv.appendChild(box);
   });
+
   periodsGrid.appendChild(datesDiv);
 
   // 3) بناء بوكسات الأوقات (مقفلة افتراضياً)
@@ -406,9 +405,9 @@ async function renderPeriods(course) {
 
     box.addEventListener("click", () => {
       if (box.classList.contains("disabled")) return;
-      // خزّن الفترة
+      // خزن الفترة المختارة
       selectedPeriod = time;
-      // ظلّل الفترة المختارة
+      // ظلّلها
       timesDiv.querySelectorAll(".period-box")
         .forEach(b => b.classList.remove("selected"));
       box.classList.add("selected");
@@ -416,6 +415,7 @@ async function renderPeriods(course) {
 
     timesDiv.appendChild(box);
   });
+
   periodsGrid.appendChild(timesDiv);
 }
 
