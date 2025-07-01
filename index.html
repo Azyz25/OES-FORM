@@ -317,7 +317,7 @@ document.getElementById("selectedDate").addEventListener("change", (e) => {
 
 
   // 6) ارسم الفترات وجرب تعطل اللي محجوزة
- async function renderPeriods(course) {
+async function renderPeriods(course) {
   periodsGrid.innerHTML = "";
 
   const dates = course.date.split(",").map(d => d.trim());
@@ -353,13 +353,16 @@ document.getElementById("selectedDate").addEventListener("change", (e) => {
   const timesDiv = document.createElement("div");
   timesDiv.innerHTML = `<h4>اختر الوقت</h4>`;
   times.forEach((time) => {
-    const slotKey = `${selectedDate}_${time}`; // نحدثه لاحقا عند الحفظ
-
     const box = document.createElement("div");
     box.className = "period-box";
     box.textContent = time;
 
     box.onclick = () => {
+      if (!selectedDate) {
+        alert("يرجى اختيار التاريخ أولاً");
+        return;
+      }
+
       selectedPeriod = time;
       timesDiv.querySelectorAll(".period-box")
               .forEach(b => b.classList.remove("selected"));
@@ -376,6 +379,18 @@ document.getElementById("selectedDate").addEventListener("change", (e) => {
     e.preventDefault();
     if (!selectedDate) return alert("الرجاء اختيار التاريخ.");
     if (!selectedPeriod) return alert("الرجاء اختيار فترة.");
+
+    
+  const snap = await get(ref(db, "trainees"));
+  const all = snap.exists() ? Object.values(snap.val()) : [];
+  const isTaken = all.some(t =>
+    t.courseId === currentCourse.id &&
+    t.date === selectedDate &&
+    t.time === selectedPeriod
+  );
+  if (isTaken) {
+    return alert("هذه الفترة محجوزة بالفعل. يرجى اختيار فترة أخرى.");
+  }
 
     // جمع بيانات
     const name      = form.name.value.trim();
