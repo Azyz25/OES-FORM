@@ -334,7 +334,7 @@ input#nationalId {
     modal.style.display = "flex";
   }
 
-  selectedDate = null;
+
 async function renderPeriods(course) {
   periodsGrid.innerHTML = "";
 
@@ -357,7 +357,18 @@ async function renderPeriods(course) {
     box.className = "period-box";
     box.textContent = date;
 
+    // التحقق إذا كل أوقات هذا التاريخ محجوزة
+    const allTimesTaken = times.every(time => takenSlots.includes(`${date}_${time}`));
+    if (allTimesTaken) {
+      box.style.backgroundColor = "#ccc"; // لون رمادي غامق شوي
+      box.style.opacity = "0.7";
+      box.style.cursor = "not-allowed";
+      box.classList.add("disabled");
+    }
+
     box.onclick = () => {
+      if (box.classList.contains("disabled")) return;
+
       selectedDate = date;
       datesDiv.querySelectorAll(".period-box")
               .forEach(b => b.classList.remove("selected"));
@@ -367,15 +378,10 @@ async function renderPeriods(course) {
       timesDiv.querySelectorAll(".period-box").forEach((timeBox, i) => {
         const time = times[i];
         const slotKey = `${selectedDate}_${time}`;
-        if (dates[i] === selectedDate) {
-          // إذا هذا الوقت مربوط بالتاريخ ومب محجوز
-          if (takenSlots.includes(slotKey)) {
-            timeBox.classList.add("disabled");
-          } else {
-            timeBox.classList.remove("disabled");
-          }
-        } else {
+        if (takenSlots.includes(slotKey)) {
           timeBox.classList.add("disabled");
+        } else {
+          timeBox.classList.remove("disabled");
         }
       });
     };
@@ -405,6 +411,8 @@ async function renderPeriods(course) {
   });
   periodsGrid.appendChild(timesDiv);
 }
+
+
 
   // 7) عند الإرسال نحفظ السجل فقط في trainees ثم نعيد تحميل الكورسات
   form.addEventListener("submit", async e => {
