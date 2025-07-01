@@ -335,7 +335,8 @@ input#nationalId {
   }
 
 
-async function renderPeriods(course) {
+
+  async function renderPeriods(course) {
   periodsGrid.innerHTML = "";
 
   const dates = course.date.split(",").map(d => d.trim());
@@ -357,7 +358,7 @@ async function renderPeriods(course) {
     box.className = "period-box";
     box.textContent = date;
 
-    // التحقق إذا كل أوقات هذا التاريخ محجوزة
+    // تحقق إذا كل أوقات هالتاريخ محجوزة
     const allTimesTaken = times.every(time => takenSlots.includes(`${date}_${time}`));
     if (allTimesTaken) {
       box.style.backgroundColor = "#ccc"; // لون رمادي غامق شوي
@@ -374,53 +375,50 @@ async function renderPeriods(course) {
               .forEach(b => b.classList.remove("selected"));
       box.classList.add("selected");
 
-      // عند اختيار التاريخ حدّث الأوقات
-      renderTimesForDate(date);
+      // عند اختيار التاريخ: فعل أوقاته فقط
+      timesDiv.querySelectorAll(".period-box").forEach((timeBox) => {
+        const time = timeBox.textContent.trim();
+        const slotKey = `${selectedDate}_${time}`;
+
+        // إذا الوقت مرتبط بالتاريخ ومب محجوز
+        if (dates.includes(selectedDate)) {
+          if (takenSlots.includes(slotKey)) {
+            timeBox.classList.add("disabled");
+          } else {
+            timeBox.classList.remove("disabled");
+          }
+        } else {
+          timeBox.classList.add("disabled");
+        }
+      });
     };
 
     datesDiv.appendChild(box);
   });
   periodsGrid.appendChild(datesDiv);
 
-  // 🕐 بوكسات الأوقات (تُعرض بعد اختيار التاريخ)
+  // 🕐 بوكسات الأوقات
   const timesDiv = document.createElement("div");
   timesDiv.innerHTML = `<h4>اختر الوقت</h4>`;
+  times.forEach((time) => {
+    const box = document.createElement("div");
+    box.className = "period-box disabled"; // بالبداية مقفل
+    box.textContent = time;
+
+    box.onclick = () => {
+      if (box.classList.contains("disabled")) return;
+
+      selectedPeriod = time;
+      timesDiv.querySelectorAll(".period-box")
+              .forEach(b => b.classList.remove("selected"));
+      box.classList.add("selected");
+    };
+
+    timesDiv.appendChild(box);
+  });
   periodsGrid.appendChild(timesDiv);
-
-  function renderTimesForDate(date) {
-    timesDiv.innerHTML = `<h4>اختر الوقت</h4>`; // يعيد العنوان
-
-    times.forEach((time) => {
-      const slotKey = `${date}_${time}`;
-      const box = document.createElement("div");
-      box.className = "period-box";
-      box.textContent = time;
-
-      if (!dates.includes(date)) {
-        box.classList.add("disabled");
-      }
-
-      // إذا الفترة محجوزة
-      if (takenSlots.includes(slotKey)) {
-        box.classList.add("disabled");
-      }
-
-      box.onclick = () => {
-        if (box.classList.contains("disabled")) return;
-
-        selectedPeriod = time;
-        timesDiv.querySelectorAll(".period-box")
-                .forEach(b => b.classList.remove("selected"));
-        box.classList.add("selected");
-      };
-
-      timesDiv.appendChild(box);
-    });
-  }
 }
 
-
-  
   // 7) عند الإرسال نحفظ السجل فقط في trainees ثم نعيد تحميل الكورسات
   form.addEventListener("submit", async e => {
     e.preventDefault();
