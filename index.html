@@ -187,6 +187,18 @@ input#nationalId {
         max-width: 200px;
 
     }
+
+    .period-box {
+  background-color: #e0f0ff;
+  padding: 10px;
+  border-radius: 25px; /* مدور حلو */
+  text-align: center;
+  cursor: pointer;
+  transition: 0.3s;
+  border: 2px solid transparent;
+  margin-bottom: 10px;
+}
+
   </style>
   </head>
   <header>
@@ -322,7 +334,6 @@ input#nationalId {
   }
 
   selectedDate = null;
-
 async function renderPeriods(course) {
   periodsGrid.innerHTML = "";
 
@@ -336,16 +347,13 @@ async function renderPeriods(course) {
     .filter(t => t.courseId === course.id)
     .map(t => `${t.date}_${t.time}`);
 
-  let selectedDate = null;
-
-  // بوكسات التواريخ
+  // 🗓️ بوكسات التواريخ
   const datesDiv = document.createElement("div");
   datesDiv.style.marginBottom = "20px";
   datesDiv.innerHTML = `<h4>اختر التاريخ</h4>`;
   dates.forEach((date) => {
     const box = document.createElement("div");
     box.className = "period-box";
-    box.style.marginBottom = "10px";
     box.textContent = date;
 
     box.onclick = () => {
@@ -354,11 +362,12 @@ async function renderPeriods(course) {
               .forEach(b => b.classList.remove("selected"));
       box.classList.add("selected");
 
-      // بعد اختيار التاريخ فعل الاوقات الخاصة به فقط
+      // عند اختيار التاريخ حدّث الأوقات
       timesDiv.querySelectorAll(".period-box").forEach((timeBox, i) => {
-        const slotKey = `${selectedDate}_${times[i]}`;
-
-        if (course.date.split(",")[i].trim() === selectedDate) {
+        const time = times[i];
+        const slotKey = `${selectedDate}_${time}`;
+        if (dates[i] === selectedDate) {
+          // إذا هذا الوقت مربوط بالتاريخ ومب محجوز
           if (takenSlots.includes(slotKey)) {
             timeBox.classList.add("disabled");
           } else {
@@ -374,13 +383,12 @@ async function renderPeriods(course) {
   });
   periodsGrid.appendChild(datesDiv);
 
-  // بوكسات الأوقات
+  // 🕐 بوكسات الأوقات
   const timesDiv = document.createElement("div");
   timesDiv.innerHTML = `<h4>اختر الوقت</h4>`;
-  times.forEach((time) => {
+  times.forEach((time, i) => {
     const box = document.createElement("div");
-    box.className = "period-box disabled"; // بالبداية مقفلة
-    box.style.marginBottom = "10px";
+    box.className = "period-box disabled"; // بالبداية مقفل
     box.textContent = time;
 
     box.onclick = () => {
