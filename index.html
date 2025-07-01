@@ -330,29 +330,45 @@ document.getElementById("selectedDate").addEventListener("change", (e) => {
     .filter(t => t.courseId === course.id)
     .map(t => `${t.date}_${t.time}`);
 
-  // بناء البوكسات
-  dates.forEach((date, i) => {
-    const time = times[i] || "";
-    const slotKey = `${date}_${time}`;
+  // بوكسات التواريخ
+  const datesDiv = document.createElement("div");
+  datesDiv.innerHTML = `<h4>اختر التاريخ</h4>`;
+  dates.forEach((date) => {
+    const box = document.createElement("div");
+    box.className = "period-box";
+    box.textContent = date;
+
+    box.onclick = () => {
+      selectedDate = date;
+      datesDiv.querySelectorAll(".period-box")
+              .forEach(b => b.classList.remove("selected"));
+      box.classList.add("selected");
+    };
+
+    datesDiv.appendChild(box);
+  });
+  periodsGrid.appendChild(datesDiv);
+
+  // بوكسات الأوقات
+  const timesDiv = document.createElement("div");
+  timesDiv.innerHTML = `<h4>اختر الوقت</h4>`;
+  times.forEach((time) => {
+    const slotKey = `${selectedDate}_${time}`; // نحدثه لاحقا عند الحفظ
 
     const box = document.createElement("div");
     box.className = "period-box";
-    box.textContent = `${date} ${time}`;
+    box.textContent = time;
 
-    if (takenSlots.includes(slotKey)) {
-      box.classList.add("disabled");
-    } else {
-      box.onclick = () => {
-        selectedPeriod = time;
-        selectedDate = date;
-        document.querySelectorAll(".period-box")
-                .forEach(b => b.classList.remove("selected"));
-        box.classList.add("selected");
-      };
-    }
+    box.onclick = () => {
+      selectedPeriod = time;
+      timesDiv.querySelectorAll(".period-box")
+              .forEach(b => b.classList.remove("selected"));
+      box.classList.add("selected");
+    };
 
-    periodsGrid.appendChild(box);
+    timesDiv.appendChild(box);
   });
+  periodsGrid.appendChild(timesDiv);
 }
 
   // 7) عند الإرسال نحفظ السجل فقط في trainees ثم نعيد تحميل الكورسات
