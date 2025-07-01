@@ -340,10 +340,12 @@ async function renderPeriods(course) {
 
   // بوكسات التواريخ
   const datesDiv = document.createElement("div");
+  datesDiv.style.marginBottom = "20px";
   datesDiv.innerHTML = `<h4>اختر التاريخ</h4>`;
   dates.forEach((date) => {
     const box = document.createElement("div");
     box.className = "period-box";
+    box.style.marginBottom = "10px";
     box.textContent = date;
 
     box.onclick = () => {
@@ -352,15 +354,18 @@ async function renderPeriods(course) {
               .forEach(b => b.classList.remove("selected"));
       box.classList.add("selected");
 
-      // بعد اختيار التاريخ فعل الاوقات المناسبة
-      timesDiv.querySelectorAll(".period-box").forEach(timeBox => {
-        const time = timeBox.getAttribute("data-time");
-        const slotKey = `${selectedDate}_${time}`;
+      // بعد اختيار التاريخ فعل الاوقات الخاصة به فقط
+      timesDiv.querySelectorAll(".period-box").forEach((timeBox, i) => {
+        const slotKey = `${selectedDate}_${times[i]}`;
 
-        if (takenSlots.includes(slotKey)) {
-          timeBox.classList.add("disabled");
+        if (course.date.split(",")[i].trim() === selectedDate) {
+          if (takenSlots.includes(slotKey)) {
+            timeBox.classList.add("disabled");
+          } else {
+            timeBox.classList.remove("disabled");
+          }
         } else {
-          timeBox.classList.remove("disabled");
+          timeBox.classList.add("disabled");
         }
       });
     };
@@ -375,7 +380,7 @@ async function renderPeriods(course) {
   times.forEach((time) => {
     const box = document.createElement("div");
     box.className = "period-box disabled"; // بالبداية مقفلة
-    box.setAttribute("data-time", time);
+    box.style.marginBottom = "10px";
     box.textContent = time;
 
     box.onclick = () => {
