@@ -202,6 +202,7 @@ input#nationalId {
         <div class="hint">مثال: 05XXXXXXXX</div>
         <input type="text" id="nationalId" placeholder="رقم الهوية الوطنية" maxlength="10" required>
         <div class="hint">مثال: 10 أرقام فقط</div>
+        <input type="date" id="selectedDate" required style="width: 95%; margin: 10px 0; height: 50px; border: solid 3px #d6d4d4; border-radius: 25px;">
         <div id="periodsGrid" class="grid-periods"></div>
         <button class="btn" type="submit">إرسال</button>
         <div class="success-message" id="successMessage">✅ تم التسجيل بنجاح</div>
@@ -232,7 +233,7 @@ input#nationalId {
   };
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
-
+  let selectedDate = null;
   // 2) عناصر الصفحة
   const coursesContainer = document.getElementById("courses");
   const modal = document.getElementById("registerModal");
@@ -309,6 +310,13 @@ input#nationalId {
     modal.style.display = "flex";
   }
 
+  selectedDate = null;
+document.getElementById("selectedDate").value = ""; // نفرغ التاريخ عند فتح المودال
+document.getElementById("selectedDate").addEventListener("change", (e) => {
+  selectedDate = e.target.value;
+});
+
+
   // 6) ارسم الفترات وجرب تعطل اللي محجوزة
   async function renderPeriods(course) {
     periodsGrid.innerHTML = "";
@@ -342,6 +350,7 @@ input#nationalId {
   // 7) عند الإرسال نحفظ السجل فقط في trainees ثم نعيد تحميل الكورسات
   form.addEventListener("submit", async e => {
     e.preventDefault();
+    if (!selectedDate) return alert("الرجاء اختيار التاريخ.");
     if (!selectedPeriod) return alert("الرجاء اختيار فترة.");
 
     // جمع بيانات
@@ -355,7 +364,7 @@ input#nationalId {
       name, email, phone, nationalId,
       courseId:      currentCourse.id,
       courseTitle:   currentCourse.title,
-      date:          currentCourse.date,
+      date:          selectedDate,
       time:          selectedPeriod,
       duration:      currentCourse.duration,
       place:         currentCourse.place || "",
