@@ -1248,7 +1248,7 @@ slotsCountInput.addEventListener('input', () => {
     e.preventDefault();
     const title    = document.getElementById('courseTitle').value.trim();
     const desc     = document.getElementById('courseDesc').value.trim();
-    const date     = document.getElementById('courseDate').value;
+    const date = Array.from(document.querySelectorAll('.slotDate')).map(i => i.value.trim()).join(',');
     const times    = Array.from(document.querySelectorAll('.slotTime')).map(i => i.value);
     const durations= Array.from(document.querySelectorAll('.slotDuration')).map(i => i.value.trim());
     const category = document.getElementById('courseCategory').value.trim();
