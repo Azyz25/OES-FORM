@@ -202,7 +202,9 @@ input#nationalId {
 
 .form-group label {
   font-weight: bold;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
+    margin-top: 8px;
+      margin-left: 8px;
   display: block;
 }
 input#cvFile {
@@ -247,10 +249,10 @@ input#cvFile:hover {
         <input type="text" id="nationalId" placeholder="رقم الهوية الوطنية" maxlength="10" required>
         <div class="hint">مثال: 10 أرقام فقط</div>
         <div class="form-group">
-  <label for="cvFile">رفع السيرة الذاتية</label>
+        <div id="periodsGrid" class="grid-periods"></div>
+          <label for="cvFile">رفع السيرة الذاتية</label>
   <input type="file" id="cvFile" accept=".pdf,.doc,.docx" required>
 </div>
-        <div id="periodsGrid" class="grid-periods"></div>
         <button class="btn" type="submit">إرسال</button>
         <div class="success-message" id="successMessage">✅ تم التسجيل بنجاح</div>
       </form>
