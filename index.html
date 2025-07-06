@@ -459,9 +459,9 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
 
   try {
     // 2) ارفع السيرة إلى GitHub
-    const githubToken = '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';  // حط هنا توكنك
-    const owner = 'YourGitHubUsername';      // غيّره لمالك المستودع
-    const repo  = 'YourRepoName';            // غيّره لاسم المستودع
+    const githubToken = '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';  // حط هنا توكنك
+    const owner = 'Azyz252';      // غيّره لمالك المستودع
+    const repo  = 'OES-FORM';            // غيّره لاسم المستودع
 
     const result = await uploadToGitHub(file, githubToken, owner, repo);
     console.log('Upload success:', result);
