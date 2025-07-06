@@ -419,53 +419,6 @@ async function renderPeriods(course) {
 
   periodsGrid.appendChild(datesDiv);
 
-/**
- * يرفع ملف إلى GitHub Repo في المسار cv-mdrb/{filename}
- *
- * @param {File} file      الملف الذي اختاره المستخدم
- * @param {string} token   GitHub Personal Access Token (يجب أن يحتوي على صلاحية repo:contents)
- * @param {string} owner   مالك المستودع (username أو org)
- * @param {string} repo    اسم المستودع
- */
-async function uploadToGitHub(file, token, owner, repo) {
-  // 1) اقرأ الملف كـ Base64
-  const contentBase64 = await new Promise((res, rej) => {
-    const reader = new FileReader();
-    reader.onload = () => res(reader.result.split(',')[1]);
-    reader.onerror = rej;
-    reader.readAsDataURL(file);
-  });
-
-  // 2) حدّد اسم الملف داخل المجلد
-  const path = `cv-mdrb/${file.name}`;
-
-  // 3) جهّز الـ payload
-  const payload = {
-    message: `Add/Update CV for ${file.name}`,  // رسالة الكوميت
-    content: contentBase64,
-    branch: 'main'
-  };
-
-  // 4) استدعاء GitHub API
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
-  const resp = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `token ${token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.github.v3+json'
-    },
-    body: JSON.stringify(payload)
-  });
-
-  if (!resp.ok) {
-    const err = await resp.json();
-    throw new Error(`GitHub API Error: ${err.message}`);
-  }
-
-  return resp.json();  // يحتوي على معلومات الكوميت الجديد
-}
-
 
   // 3) بناء بوكسات الأوقات (مقفلة افتراضياً)
   const timesDiv = document.createElement("div");
@@ -578,6 +531,55 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
 
   // 8) شغلها أول ما تحمل الصفحة
   fetchCourses();
+
+  /**
+ * يرفع ملف إلى GitHub Repo في المسار cv-mdrb/{filename}
+ *
+ * @param {File} file      الملف الذي اختاره المستخدم
+ * @param {string} token   GitHub Personal Access Token (يجب أن يحتوي على صلاحية repo:contents)
+ * @param {string} owner   مالك المستودع (username أو org)
+ * @param {string} repo    اسم المستودع
+ */
+async function uploadToGitHub(file, token, owner, repo) {
+  // 1) اقرأ الملف كـ Base64
+  const contentBase64 = await new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = () => res(reader.result.split(',')[1]);
+    reader.onerror = rej;
+    reader.readAsDataURL(file);
+  });
+
+  // 2) حدّد اسم الملف داخل المجلد
+  const path = `cv-mdrb/${file.name}`;
+
+  // 3) جهّز الـ payload
+  const payload = {
+    message: `Add/Update CV for ${file.name}`,  // رسالة الكوميت
+    content: contentBase64,
+    branch: 'main'
+  };
+
+  // 4) استدعاء GitHub API
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+  const resp = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github.v3+json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json();
+    throw new Error(`GitHub API Error: ${err.message}`);
+  }
+
+  return resp.json();  // يحتوي على معلومات الكوميت الجديد
+}
+
+
 </script>
 
 </body>
