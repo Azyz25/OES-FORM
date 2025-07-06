@@ -564,7 +564,7 @@ async function uploadToGitHub(file, token, owner, repo) {
   const resp = await fetch(url, {
     method: 'PUT',
     headers: {
-      'Authorization': `token ${token}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
       'Accept': 'application/vnd.github.v3+json'
     },
