@@ -447,35 +447,22 @@ async function renderPeriods(course) {
   periodsGrid.appendChild(timesDiv);
 }
 
-document.getElementById('registerForm').addEventListener('submit', async e => {
-  e.preventDefault();
-  // … جمع باقي حقول النموذج …
-
-  // 1) احصل على الملف
-  const cvInput = document.getElementById('cvFile');
-  if (!cvInput.files.length) {
-    return alert('الرجاء رفع السيرة الذاتية');
-  }
-  const file = cvInput.files[0];
-
-  
-
-  form.addEventListener("submit", async (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // 1) تحقق من اختيار التاريخ والوقت
+  // 1) التحقق من اختيار التاريخ والوقت
   if (!selectedDate)   return alert("الرجاء اختيار التاريخ.");
   if (!selectedPeriod) return alert("الرجاء اختيار الفترة.");
 
-  // 2) تحقق من رفع السيرة الذاتية
+  // 2) التحقق من رفع السيرة الذاتية
   const cvInput = document.getElementById("cvFile");
   if (!cvInput.files.length) {
     return alert("الرجاء رفع السيرة الذاتية");
   }
   const file = cvInput.files[0];
 
-  // 3) تأكد أن الفترة غير محجوزة مسبقاً
   try {
+    // 3) تأكد أن الفترة غير محجوزة مسبقاً
     const traineesSnap = await get(ref(db, "trainees"));
     const allTrainees = traineesSnap.exists() ? Object.values(traineesSnap.val()) : [];
     const isTaken = allTrainees.some(t =>
@@ -487,7 +474,7 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
       return alert("هذه الفترة محجوزة بالفعل. يرجى اختيار فترة أخرى.");
     }
 
-    // 4) ارفع الملف على Firebase Storage
+    // 4) ارفع السيرة إلى Firebase Storage
     const storagePath = `cv-mdrb/${file.name}`;
     const storageRef  = sRef(storage, storagePath);
     await uploadBytes(storageRef, file);
@@ -510,7 +497,7 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
       place:       currentCourse.place || "",
       category:    currentCourse.category || "",
       target:      currentCourse.target || "",
-      registeredAt: new Date().toISOString()
+      registeredAt:new Date().toISOString()
     };
 
     // 7) حفظ البيانات في Realtime Database
@@ -531,7 +518,9 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
     alert("حدث خطأ أثناء عملية التسجيل: " + err.message);
   }
 });
-  // 8) شغلها أول ما تحمل الصفحة
+
+// شغلها أول ما تحمل الصفحة
+
   fetchCourses();
 
 
