@@ -460,72 +460,77 @@ document.getElementById('registerForm').addEventListener('submit', async e => {
 
   
 
-  
-  // 7) عند الإرسال نحفظ السجل فقط في trainees ثم نعيد تحميل الكورسات
-  form.addEventListener("submit", async e => {
+  form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!selectedDate)     return alert("الرجاء اختيار التاريخ.");
-  if (!selectedPeriod)   return alert("الرجاء اختيار فترة.");
 
-    
-  const snap = await get(ref(db, "trainees"));
-  const all = snap.exists() ? Object.values(snap.val()) : [];
-  const isTaken = all.some(t =>
-    t.courseId === currentCourse.id &&
-    t.date === selectedDate &&
-    t.time === selectedPeriod
-  );
-  if (isTaken) {
-    return alert("هذه الفترة محجوزة بالفعل. يرجى اختيار فترة أخرى.");
-  }
+  // 1) تحقق من اختيار التاريخ والوقت
+  if (!selectedDate)   return alert("الرجاء اختيار التاريخ.");
+  if (!selectedPeriod) return alert("الرجاء اختيار الفترة.");
 
-    // جمع بيانات
-    const name      = form.name.value.trim();
-    const email     = form.email.value.trim();
-    const phone     = form.phone.value.trim();
-    const nationalId= form.nationalId.value.trim();
-    // (هنا تقدر تحط الفاليديشن زي ما تبي)
- const cvInput = document.getElementById('cvFile');
+  // 2) تحقق من رفع السيرة الذاتية
+  const cvInput = document.getElementById("cvFile");
   if (!cvInput.files.length) {
-    return alert('الرجاء رفع السيرة الذاتية');
+    return alert("الرجاء رفع السيرة الذاتية");
   }
   const file = cvInput.files[0];
 
+  // 3) تأكد أن الفترة غير محجوزة مسبقاً
   try {
-    // 4) ارفع السيرة إلى Firebase Storage
-    const path = `cv-mdrb/${file.name}`;
-    const storageRef = sRef(storage, path);
+    const traineesSnap = await get(ref(db, "trainees"));
+    const allTrainees = traineesSnap.exists() ? Object.values(traineesSnap.val()) : [];
+    const isTaken = allTrainees.some(t =>
+      t.courseId === currentCourse.id &&
+      t.date     === selectedDate &&
+      t.time     === selectedPeriod
+    );
+    if (isTaken) {
+      return alert("هذه الفترة محجوزة بالفعل. يرجى اختيار فترة أخرى.");
+    }
+
+    // 4) ارفع الملف على Firebase Storage
+    const storagePath = `cv-mdrb/${file.name}`;
+    const storageRef  = sRef(storage, storagePath);
     await uploadBytes(storageRef, file);
 
     // 5) احصل على رابط التحميل
     const cvUrl = await getDownloadURL(storageRef);
-    
-    const traineeData = {
-      name, email, phone, nationalId,
-      courseId:      currentCourse.id,
-      courseTitle:   currentCourse.title,
-      date:          selectedDate,
-      time:          selectedPeriod,
-      duration:      currentCourse.duration,
-      cvUrl,
-      place:         currentCourse.place || "",
-      category:      currentCourse.category || "",
-      target:        currentCourse.target || "",
-      registeredAt:  new Date().toISOString()
-    };
-    const refTra = push(ref(db, "trainees"));
-    await set(refTra, traineeData);
 
+    // 6) جمع بيانات المتدرب
+    const traineeData = {
+      name:        form.name.value.trim(),
+      email:       form.email.value.trim(),
+      phone:       form.phone.value.trim(),
+      nationalId:  form.nationalId.value.trim(),
+      courseId:    currentCourse.id,
+      courseTitle: currentCourse.title,
+      date:        selectedDate,
+      time:        selectedPeriod,
+      cvUrl,
+      duration:    currentCourse.duration,
+      place:       currentCourse.place || "",
+      category:    currentCourse.category || "",
+      target:      currentCourse.target || "",
+      registeredAt: new Date().toISOString()
+    };
+
+    // 7) حفظ البيانات في Realtime Database
+    const newRef = push(ref(db, "trainees"));
+    await set(newRef, traineeData);
+
+    // 8) إظهار رسالة النجاح وتحديث الواجهة
     successMsg.style.display = "block";
     form.querySelector("button").disabled = true;
-
     setTimeout(() => {
       window.closeModal();
       form.querySelector("button").disabled = false;
       fetchCourses();
     }, 2000);
-  });
 
+  } catch (err) {
+    console.error(err);
+    alert("حدث خطأ أثناء عملية التسجيل: " + err.message);
+  }
+});
   // 8) شغلها أول ما تحمل الصفحة
   fetchCourses();
 
