@@ -8,6 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
   <style>
 
     @font-face {
@@ -653,24 +654,26 @@ border-radius: 25px;
   <button id="exportTrainersBtn" class="btn" style="margin-bottom: 20px;">📤 تصدير بيانات المدربين و دوراتهم</button>
   <div style="overflow-x:auto;">
     <table id="trainersTable">
-      <thead>
-        <tr>
-          <th>الاسم</th>
-           <th>المسمى الوظيفي</th> 
-          <th>البريد الإلكتروني</th>
-          <th>الجوال</th>
-          <th>رقم الهوية</th>
-          <th>وقت التسجيل</th>
-          <th>ايدي الدورة</th>
-          <th>عنوان الدورة</th>
-          <th>التاريخ</th>
-          <th>الوقت</th>
-          <th>المدة</th>
-          <th>التصنيف</th>
-          <th>المكان</th>
-          <th>الفئة المستهدفة</th>
-        </tr>
-      </thead>
+     <thead>
+  <tr>
+    <th>الاسم</th>
+    <th>المسمى الوظيفي</th>
+    <th>البريد الإلكتروني</th>
+    <th>الجوال</th>
+    <th>رقم الهوية</th>
+    <th>السيرة الذاتية</th>
+    <th>وقت التسجيل</th>
+    <th>معرّف الدورة</th>
+    <th>عنوان الدورة</th>
+    <th>التاريخ</th>
+    <th>الوقت</th>
+    <th>المدة</th>
+    <th>التصنيف</th>
+    <th>المكان</th>
+    <th>الفئة المستهدفة</th>
+  </tr>
+</thead>
+
       <tbody>
         <!-- ROWS تُضاف ديناميكياً -->
       </tbody>
@@ -1457,10 +1460,13 @@ function loadTrainees() {
       tbody.insertAdjacentHTML('beforeend', `
         <tr>
           <td>${t.name}</td>
+          <td>${t.workname || ''}</td>
           <td>${t.email}</td>
           <td>${t.phone}</td>
           <td>${t.nationalId}</td>
-          <td>${t.workname}</td>              <!-- ← جديد -->
+          <td>
+            <button class="btn" onclick="window.open('${t.cvUrl}','_blank')">عرض</button>
+          </td>
           <td>${new Date(t.registeredAt).toLocaleString('ar-EG')}</td>
           <td>${t.courseId}</td>
           <td>${t.courseTitle}</td>
@@ -1475,37 +1481,37 @@ function loadTrainees() {
     });
   });
 }
-
 // 3) زر تصدير البيانات إلى CSV
 document.getElementById('exportTrainersBtn').addEventListener('click', exportTrainers);
+
+
+document.getElementById('exportTrainersBtn').addEventListener('click', exportTrainers);
+
 async function exportTrainers() {
   if (!trainersData.length) return alert('لا توجد بيانات للتصدير');
+  const dateTag = new Date().toISOString().slice(0,10);
+  const zip = new JSZip();
 
-  // 1) رؤوس الأعمدة مع المسمى الوظيفي
-  const headers = [
-    'الاسم','البريد الإلكتروني','الجوال','الهوية الوطنية',
-    'المسمى الوظيفي',            // ← جديد
-    'تاريخ التسجيل','معرّف الدورة','عنوان الدورة',
-    'التاريخ','الوقت','المدة','التصنيف','المكان','الفئة المستهدفة'
-  ];
-
-  // 2) إنشاء Workbook و Worksheet
+  // 1) تحضير ملف الإكسيل
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'لوحة المشرف';
   workbook.created = new Date();
   const sheet = workbook.addWorksheet('Trainers');
 
-  // 3) أضف رؤوس
-  sheet.addRow(headers).font = { bold: true };
+  const headers = [
+    'الاسم','المسمى الوظيفي','البريد الإلكتروني','الجوال','رقم الهوية',
+    'تاريخ التسجيل','معرّف الدورة','عنوان الدورة','التاريخ','الوقت',
+    'المدة','التصنيف','المكان','الفئة المستهدفة'
+  ];
+  sheet.addRow(headers).font = { bold:true };
 
-  // 4) أضف كل صف
   trainersData.forEach(t => {
     sheet.addRow([
       t.name,
+      t.workname || '',
       t.email,
       t.phone,
       t.nationalId,
-      t.workname,                // ← جديد
       new Date(t.registeredAt).toLocaleString('ar-EG'),
       t.courseId,
       t.courseTitle,
@@ -1518,30 +1524,50 @@ async function exportTrainers() {
     ]);
   });
 
-  // 5) تنسيق الأعمدة (كما كان عندك)
+  // ضبط أعمدة الإكسيل
   sheet.columns.forEach(col => {
     let max = 10;
-    col.eachCell({ includeEmpty: true }, cell => {
-      const len = (cell.value||'').toString().length;
-      if (len>max) max = len;
+    col.eachCell({ includeEmpty:true }, cell => {
+      const l = (cell.value||'').toString().length;
+      if (l>max) max=l;
     });
-    col.width = max+2;
+    col.width = max + 2;
   });
 
-  // 6) تنزيل الملف
-  const buf = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buf], {
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-  });
-  const url = URL.createObjectURL(blob);
+  // 2) إضافة ملف الإكسيل للـ ZIP
+  const excelBuffer = await workbook.xlsx.writeBuffer();
+  zip.file(`التدريبون_${dateTag}.xlsx`, excelBuffer);
+
+  // 3) إضافة كل ملفات السيرة الذاتية
+  for (const t of trainersData) {
+    if (t.cvUrl) {
+      try {
+        const resp = await fetch(t.cvUrl);
+        const blob = await resp.blob();
+        const arrBuf = await blob.arrayBuffer();
+        // استخراج الامتداد من الرابط
+        const ext = t.cvUrl.split('.').pop().split('?')[0];
+        const safeName = t.name.replace(/\s+/g,'_');
+        zip.file(`${safeName}_${t.courseId}.${ext}`, arrBuf);
+      } catch(err) {
+        console.warn('فشل جلب السيرة لـ', t.name, err);
+      }
+    }
+  }
+
+  // 4) توليد وتنزيل ZIP
+  const zipBlob = await zip.generateAsync({ type:'blob' });
+  const url = URL.createObjectURL(zipBlob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `trainers_${new Date().toISOString().slice(0,10)}.xlsx`;
+  a.download = `trainers_bundle_${dateTag}.zip`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+
 
   // helper to hide all sections
   function hideAllSections() {
