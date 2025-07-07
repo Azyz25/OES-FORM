@@ -209,7 +209,7 @@ input#nationalId {
 }
 input#cvFile {
   display: block;
-  width: 100%;
+  width: 94%;
   padding: 8px;
   border-radius: 8px;
   border: 2px dashed #4c5fac;
@@ -243,11 +243,12 @@ input#cvFile:hover {
       <form id="registerForm">
         <input type="hidden" id="selectedCourseId">
         <input type="text" id="name" placeholder="الاسم الثلاثي" required>
+        <input type="text" id="work-name" placeholder="المسمى الوظيفي" required>
         <input type="email" id="email" placeholder="البريد الإلكتروني" required>
         <input type="text" id="phone" placeholder="رقم الجوال (05XXXXXXXX)" maxlength="10" required>
         <div class="hint">مثال: 05XXXXXXXX</div>
         <input type="text" id="nationalId" placeholder="رقم الهوية الوطنية" maxlength="10" required>
-        <div class="hint">مثال: 10 أرقام فقط</div>
+        <div class="hint">10 أرقام فقط</div>
 <div class="form-group">
     <label for="cvFile">رفع السيرة الذاتية (PDF أو Word)</label>
     <input type="file" id="cvFile" accept=".pdf,.doc,.docx" required>
@@ -462,6 +463,7 @@ form.addEventListener("submit", async e => {
     // جمع البيانات
     const traineeData = {
       name:        form.name.value.trim(),
+      workname:        form.work-name.value.trim(),
       email:       form.email.value.trim(),
       phone:       form.phone.value.trim(),
       nationalId:  form.nationalId.value.trim(),
