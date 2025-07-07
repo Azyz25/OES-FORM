@@ -1319,80 +1319,114 @@ slotsCountInput.addEventListener('input', () => {
 
   // دوال التعديل والحذف
   let currentEditId = null;
-  function editCourse(id) {
-    currentEditId = id;
-    firebase.database().ref('courses/' + id).once('value').then(snapshot => {
-      const c = snapshot.val();
-      const overlay = document.createElement('div'); overlay.className = 'dialog-overlay';
-      overlay.innerHTML = `
-        <div class="dialog-box">
-          <h3>تعديل الدورة</h3>
-          <div class="form-group"><label>العنوان</label><input id="d_title" value="${c.title}" /></div>
-          <div class="form-group"><label>الوصف</label><textarea id="d_desc">${c.description}</textarea></div>
-          <div class="form-group"><label>التاريخ</label><input type="date" id="d_date" value="${c.date}" /></div>
-          <div class="form-group"><label>الوقت (, مفصولة)</label><input id="d_time" value="${c.time}" /></div>
-          <div class="form-group"><label>المدة (, مفصولة)</label><input id="d_duration" value="${c.duration}" /></div>
-          <div class="form-group"><label>التصنيف</label><input id="d_category" value="${c.category}" /></div>
-          <div class="form-group"><label>المكان</label><input id="d_place" value="${c.place}" /></div>
-          <div class="form-group"><label>الفئة المستهدفة</label><input id="d_target" value="${c.target}" /></div>
-          <div class="actions">
-            <button class="btn-submit" onclick="saveEditCourse()">حفظ</button>
-            <button class="btn-close" id="btnCloseEdit">إغلاق</button>
-          </div>
+ // 1) دالة عرض حوار تعديل الدورة
+function editCourse(id) {
+  currentEditId = id;
+  firebase.database().ref('courses/' + id).once('value').then(snapshot => {
+    const c = snapshot.val();
+
+    // فك التواريخ/الأوقات/المدد إلى مصفوفات
+    const datesArr    = (c.date     || '').split(',').map(s=>s.trim());
+    const timesArr    = (c.time     || '').split(',').map(s=>s.trim());
+    const durArr      = (c.duration || '').split(',').map(s=>s.trim());
+    const slotCount   = datesArr.length;
+
+    // بناء حقول كل فترة
+    let slotsHtml = '';
+    for (let i = 0; i < slotCount; i++) {
+      slotsHtml += `
+        <div class="form-group">
+          <label>تاريخ الفترة ${i+1}</label>
+          <input type="date" id="d_date_${i}" value="${datesArr[i]||''}" required />
+        </div>
+        <div class="form-group">
+          <label>الوقت ${i+1}</label>
+          <input type="time" id="d_time_${i}" value="${timesArr[i]||''}" required />
+        </div>
+        <div class="form-group">
+          <label>المدة ${i+1}</label>
+          <input type="text" id="d_duration_${i}" value="${durArr[i]||''}" placeholder="مثال: ساعتين" required />
         </div>
       `;
-      document.body.appendChild(overlay);
+    }
 
-      // حفظ القيم الأصلية للمقارنة
-      const original = {
-        title: c.title,
-        description: c.description,
-        date: c.date,
-        time: c.time,
-        duration: c.duration,
-        category: c.category,
-        place: c.place,
-        target: c.target
-      };
+    // بناء الـ dialog كامل
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    overlay.setAttribute('data-dialog', '');
+    overlay.innerHTML = `
+      <div class="dialog-box">
+        <h3>تعديل الدورة</h3>
+        <div class="form-group">
+          <label>العنوان</label>
+          <input type="text" id="d_title" value="${c.title||''}" required />
+        </div>
+        <div class="form-group">
+          <label>الوصف</label>
+          <textarea id="d_desc" required>${c.description||''}</textarea>
+        </div>
+        ${slotsHtml}
+        <div class="form-group">
+          <label>التصنيف</label>
+          <input type="text" id="d_category" value="${c.category||''}" required />
+        </div>
+        <div class="form-group">
+          <label>المكان</label>
+          <input type="text" id="d_place" value="${c.place||''}" required />
+        </div>
+        <div class="form-group">
+          <label>الفئة المستهدفة</label>
+          <input type="text" id="d_target" value="${c.target||''}" required />
+        </div>
+        <div class="dialog-actions">
+          <button class="btn-submit" onclick="saveEditCourse(${slotCount})">حفظ</button>
+          <button class="btn-close" onclick="this.closest('[data-dialog]').remove()">إغلاق</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  });
+}
 
-      // عند الضغط على زر الإغلاق
-      document.getElementById('btnCloseEdit').addEventListener('click', () => {
-        const current = {
-          title: document.getElementById('d_title').value.trim(),
-          description: document.getElementById('d_desc').value.trim(),
-          date: document.getElementById('d_date').value,
-          time: document.getElementById('d_time').value.trim(),
-          duration: document.getElementById('d_duration').value.trim(),
-          category: document.getElementById('d_category').value.trim(),
-          place: document.getElementById('d_place').value.trim(),
-          target: document.getElementById('d_target').value.trim()
-        };
-        // تحقق من وجود تعديل
-        const changed = Object.keys(original).some(key => original[key] !== current[key]);
-        if (changed) {
-          if (!confirm('هل أنت متأكد من ترك التعديلات دون حفظ؟')) return;
-        }
-        overlay.remove();
-      });
-    });
+// 2) دالة حفظ التعديلات
+function saveEditCourse(slotCount) {
+  // جمع القيم المعدّلة
+  const updates = {
+    title:       document.getElementById('d_title').value.trim(),
+    description: document.getElementById('d_desc').value.trim(),
+    category:    document.getElementById('d_category').value.trim(),
+    place:       document.getElementById('d_place').value.trim(),
+    target:      document.getElementById('d_target').value.trim(),
+  };
+
+  // جمع التواريخ/الأوقات/المدد لكل فترة
+  const newDates = [];
+  const newTimes = [];
+  const newDurs  = [];
+  for (let i = 0; i < slotCount; i++) {
+    newDates.push   (document.getElementById(`d_date_${i}`).value);
+    newTimes.push   (document.getElementById(`d_time_${i}`).value);
+    newDurs .push   (document.getElementById(`d_duration_${i}`).value.trim());
   }
-  function saveEditCourse() {
-    const updates = {
-      title: document.getElementById('d_title').value.trim(),
-      description: document.getElementById('d_desc').value.trim(),
-      date: document.getElementById('d_date').value,
-      time: document.getElementById('d_time').value.trim(),
-      duration: document.getElementById('d_duration').value.trim(),
-      category: document.getElementById('d_category').value.trim(),
-      place: document.getElementById('d_place').value.trim(),
-      target: document.getElementById('d_target').value.trim()
-    };
-    firebase.database().ref('courses/' + currentEditId).update(updates).then(() => {
-      document.querySelector('.dialog-overlay').remove();
+  updates.date     = newDates.join(',');
+  updates.time     = newTimes.join(',');
+  updates.duration = newDurs.join(',');
+
+  // حفظها في Firebase
+  firebase.database().ref('courses/' + currentEditId).update(updates)
+    .then(() => {
+      document.querySelector('[data-dialog]').remove();
       loadCurrentCourses();
       alert('✅ تم حفظ التعديلات');
-    });
-  }
+    })
+    .catch(err => alert('❌ خطأ أثناء الحفظ: ' + err.message));
+}
+
+ 
+ 
+ 
+ 
+ 
   function deleteCourse(id) {
     if (!confirm('هل أنت متأكد من حذف هذه الدورة؟')) return;
     firebase.database().ref('courses/' + id).remove().then(loadCurrentCourses);
