@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://form.oes.org.sa"],
+    "method": ["GET", "PUT", "POST", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Authorization"],
+    "maxAgeSeconds": 3600
+  }
+]

@@ -287,7 +287,7 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const storage = getStorage(app);
+const storage = getStorage(app, "gs://dedoapp-865f7.appspot.com");
 
 let selectedDate = null;
 let selectedPeriod = null;
