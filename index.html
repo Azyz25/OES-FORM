@@ -138,6 +138,17 @@ input#nationalId {
     border: solid 3px #d6d4d4;
     border-radius: 25px;
 }
+
+input#workname {
+    width: 95% !important;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    height: 50px;
+    border: solid 3px #d6d4d4;
+    border-radius: 25px;
+}
+
+
     input#phone {
     width: 95% !important;
     margin-top: 10px;
@@ -243,7 +254,7 @@ input#cvFile:hover {
       <form id="registerForm">
         <input type="hidden" id="selectedCourseId">
         <input type="text" id="name" placeholder="الاسم الثلاثي" required>
-        <input type="text" id="work-name" placeholder="المسمى الوظيفي" required>
+        <input type="text" id="workname" placeholder="المسمى الوظيفي" required>
         <input type="email" id="email" placeholder="البريد الإلكتروني" required>
         <input type="text" id="phone" placeholder="رقم الجوال (05XXXXXXXX)" maxlength="10" required>
         <div class="hint">مثال: 05XXXXXXXX</div>
@@ -463,7 +474,7 @@ form.addEventListener("submit", async e => {
     // جمع البيانات
     const traineeData = {
       name:        form.name.value.trim(),
-      workname:        form.work-name.value.trim(),
+      workname:    form.workname.value.trim(),
       email:       form.email.value.trim(),
       phone:       form.phone.value.trim(),
       nationalId:  form.nationalId.value.trim(),
