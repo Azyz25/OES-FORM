@@ -656,6 +656,7 @@ border-radius: 25px;
       <thead>
         <tr>
           <th>الاسم</th>
+           <th>المسمى الوظيفي</th> 
           <th>البريد الإلكتروني</th>
           <th>الجوال</th>
           <th>رقم الهوية</th>
@@ -1416,19 +1417,16 @@ function loadTrainees() {
   const tbody = document.querySelector('#trainersTable tbody');
   tbody.innerHTML = '';
   firebase.database().ref('trainees').once('value').then(snapshot => {
-    const data = snapshot.val() || {};
-    trainersData = [];  // تفريغ المصفوفة
-    Object.entries(data).forEach(([id, t]) => {
-      // نجمع السجل في مصفوفة
-      trainersData.push({ id, ...t });
-
-      // نبني صف الجدول
+    trainersData = [];
+    Object.values(snapshot.val()||{}).forEach(t => {
+      trainersData.push(t);
       tbody.insertAdjacentHTML('beforeend', `
         <tr>
           <td>${t.name}</td>
           <td>${t.email}</td>
           <td>${t.phone}</td>
           <td>${t.nationalId}</td>
+          <td>${t.workname}</td>              <!-- ← جديد -->
           <td>${new Date(t.registeredAt).toLocaleString('ar-EG')}</td>
           <td>${t.courseId}</td>
           <td>${t.courseTitle}</td>
@@ -1449,27 +1447,31 @@ document.getElementById('exportTrainersBtn').addEventListener('click', exportTra
 async function exportTrainers() {
   if (!trainersData.length) return alert('لا توجد بيانات للتصدير');
 
-  // 1) إنشاء مصفوفة الرؤوس
+  // 1) رؤوس الأعمدة مع المسمى الوظيفي
   const headers = [
-    'الاسم', 'البريد الإلكتروني', 'الجوال', 'الهوية الوطنية',
-    'تاريخ التسجيل', 'معرّف الدورة', 'عنوان الدورة',
-    'التاريخ', 'الوقت', 'المدة', 'التصنيف', 'المكان', 'الفئة المستهدفة'
+    'الاسم','البريد الإلكتروني','الجوال','الهوية الوطنية',
+    'المسمى الوظيفي',            // ← جديد
+    'تاريخ التسجيل','معرّف الدورة','عنوان الدورة',
+    'التاريخ','الوقت','المدة','التصنيف','المكان','الفئة المستهدفة'
   ];
 
-  // 2) تجهيز Workbook و Worksheet
+  // 2) إنشاء Workbook و Worksheet
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'لوحة المشرف';
   workbook.created = new Date();
   const sheet = workbook.addWorksheet('Trainers');
 
-  // 3) إضافة الصفوف
-  sheet.addRow(headers);
+  // 3) أضف رؤوس
+  sheet.addRow(headers).font = { bold: true };
+
+  // 4) أضف كل صف
   trainersData.forEach(t => {
     sheet.addRow([
       t.name,
       t.email,
       t.phone,
       t.nationalId,
+      t.workname,                // ← جديد
       new Date(t.registeredAt).toLocaleString('ar-EG'),
       t.courseId,
       t.courseTitle,
@@ -1482,37 +1484,30 @@ async function exportTrainers() {
     ]);
   });
 
-  // 4) تنسيق بسيط للرؤوس (عريض ومحاذاة مركز)
-  const headerRow = sheet.getRow(1);
-  headerRow.font = { bold: true };
-  headerRow.alignment = { horizontal: 'center' };
-
-  // 5) ضبط عرض الأعمدة تلقائياً
+  // 5) تنسيق الأعمدة (كما كان عندك)
   sheet.columns.forEach(col => {
     let max = 10;
     col.eachCell({ includeEmpty: true }, cell => {
-      const len = (cell.value || '').toString().length;
-      if (len > max) max = len;
+      const len = (cell.value||'').toString().length;
+      if (len>max) max = len;
     });
-    col.width = max + 2;
+    col.width = max+2;
   });
 
-  // 6) تصدير الملف
+  // 6) تنزيل الملف
   const buf = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buf], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `trainers_${new Date().toISOString().slice(0,10)}.xlsx`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `trainers_${new Date().toISOString().slice(0,10)}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
   URL.revokeObjectURL(url);
 }
-
- 
 
   // helper to hide all sections
   function hideAllSections() {
