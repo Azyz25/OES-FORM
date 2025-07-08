@@ -989,51 +989,91 @@ function showAddUserDialog() {
   document.body.appendChild(overlay);
 }
 
-  function saveUser(password, btn) {
-    const name = document.getElementById('newName').value.trim();
-    const type = document.getElementById('newType').value;
-    let pws = [];
-    for (let i = 1; i <= 5; i++) {
-      const val = document.querySelector(`input[name=sec${i}]:checked`);
-      if (val) pws.push(`sec${i}: ${val.value}`);
-    }
-    if (!name || !pws.length) return alert("يرجى تعبئة كل الحقول واختيار صلاحيات");
-    const id = 'user_' + Date.now();
-    db.ref("users/" + id).set({ name, type, password, powers: pws.join(" - ") })
-      .then(() => {
-        alert("✅ تم حفظ الموظف!");
-        document.querySelector('[data-dialog]').remove();
-        loadUsers();
-      });
+
+function saveUser(password) {
+  const name = document.getElementById('newName').value.trim();
+  const type = document.getElementById('newType').value;
+
+  // مصفوفة الأقسام:
+  const secs = ['sec1','sec2','sec3','sec4','sec5','sec6'];
+  const pws = [];
+
+  secs.forEach(s => {
+    // الآن يبحث عن name="power_sec1" وهكذا
+    const val = document.querySelector(`input[name="power_${s}"]:checked`);
+    if (val) pws.push(`${s}: ${val.value}`);
+  });
+
+  if (!name || pws.length !== secs.length) {
+    return alert("يرجى تعبئة كل الحقول واختيار صلاحيات");
   }
 
-  function loadUsers() {
-    db.ref("users").once("value").then(snap => {
-      const users = snap.val() || {}, cont = document.getElementById("usersContainer");
-      let html = '';
-      const mapName = { sec1:'الإحصائيات',sec2:'رفع دورة',sec3:'الدورات الحالية',sec4:'قائمة المدربين',sec5:'الموظفين و الصلاحيات',sec6:'صفحة الهبوط' };
-      Object.entries(users).forEach(([id, u]) => {
-        const rd = u.powers.split('-').map(p => mapName[p.trim().split(':')[0]]).join('، ');
-        html += `
-          <div class="staff-card">
-            <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
-              <strong>${u.name}</strong>
-              <div style="display:flex;align-items:center;gap:5px;">
-                <span>${u.password}</span>
-                <button style="margin-right: 8px !important;border: 0 !important;border-radius: 10px !important;height: 35px !important;width: 35px !important;" onclick="navigator.clipboard.writeText('${u.password}')" title="نسخ">📋</button>
-              </div>
-              <div><strong>${u.type==='admin'?'مدير':'موظف'}</strong></div>
-              <div>صلاحيات: ${rd||'—'}</div>
-            </div>
-            <div style="display:flex;gap:10px;">
-              <button style="margin-right: 8px !important;border: 0 !important;border-radius: 10px !important;height: 35px !important;width: 35px !important;" onclick="editUser('${id}')" title="تعديل">✏️</button>
-              <button style="margin-right: 8px !important;border: 0 !important;border-radius: 10px !important;height: 35px !important;width: 35px !important;" onclick="confirmDeleteUser('${id}')" title="حذف">🗑️</button>
-            </div>
-          </div>`;
-      });
-      cont.innerHTML = html || 'لا يوجد موظفين.';
+  const id = 'user_' + Date.now();
+  db.ref("users/" + id).set({
+    name,
+    type,
+    password,
+    powers: pws.join(" - ")
+  })
+  .then(() => {
+    alert("✅ تم حفظ الموظف!");
+    document.querySelector('[data-dialog]').remove();
+    loadUsers();
+  });
+}
+
+
+function loadUsers() {
+  db.ref("users").once("value").then(snap => {
+    const users = snap.val() || {};
+    const cont = document.getElementById("usersContainer");
+    cont.innerHTML = '';
+
+    const mapName = {
+      sec1:'الإحصائيات',
+      sec2:'رفع دورة',
+      sec3:'الدورات الحالية',
+      sec4:'قائمة المدربين',
+      sec5:'الموظفين و الصلاحيات',
+      sec6:'صفحة الهبوط'
+    };
+
+    Object.entries(users).forEach(([id, u]) => {
+      let displayPerms;
+      if (u.powers.trim() === 'all') {
+        // لو كله، نظهر كل الأقسام مفصولة بفواصل
+        displayPerms = Object.values(mapName).join('، ');
+      } else {
+        displayPerms = u.powers
+          .split(' - ')
+          .map(p => mapName[p.split(':')[0].trim()])
+          .join('، ');
+      }
+
+      cont.insertAdjacentHTML('beforeend', `
+        <div class="staff-card">
+          <div>
+            <strong>${u.name}</strong><br/>
+            كلمة المرور: <span>${u.password}</span>
+            <button onclick="navigator.clipboard.writeText('${u.password}')">📋</button><br/>
+            النوع: <strong>${u.type==='admin'?'مدير':'موظف'}</strong><br/>
+            الصلاحيات: ${displayPerms || '—'}
+          </div>
+          <div>
+            <button onclick="editUser('${id}')">✏️</button>
+            <button onclick="confirmDeleteUser('${id}')">🗑️</button>
+          </div>
+        </div>
+      `);
     });
-  }
+
+    if (!Object.keys(users).length) {
+      cont.textContent = 'لا يوجد موظفين.';
+    }
+  });
+}
+
+
 
   function confirmDeleteUser(id) {
     if (confirm("هل أنت متأكد من حذف هذا الموظف؟")) {
@@ -1042,83 +1082,18 @@ function showAddUserDialog() {
     }
   }
 
-  function editUser(id) {
-  const secs = ['sec1','sec2','sec3','sec4','sec5','sec6'];
-  const titles = {
-    sec1: 'الإحصائيات',
-    sec2: 'رفع دورة',
-    sec3: 'الدورات الحالية',
-    sec4: 'قائمة المدربين',
-    sec5: 'الموظفين',
-    sec6: 'صفحة الهبوط'
-  };
 
-  db.ref("users/" + id).once("value").then(snap => {
-    const u = snap.val();
-
-    // إذا كانت الصلاحيات "all"، نُعتبرها قراءة وكتابة لكل الأقسام
-    const parsed = {};
-    if (u.powers.trim() === 'all') {
-      secs.forEach(s => parsed[s] = 'read&write');
-    } else {
-      u.powers.split('-').forEach(p => {
-        const [k, v] = p.trim().split(':').map(s => s.trim());
-        parsed[k] = v;
-      });
-    }
-
-    // بناء جدول الاختيارات ديناميكيًّا
-    let tbl = '<table style="width:100%;margin:10px 0;text-align:center;"><tr>';
-    secs.forEach(s => tbl += `<th>${titles[s]}</th>`);
-    tbl += '</tr>';
-
-    ['read&write','hide'].forEach(mode => {
-      tbl += '<tr>';
-      secs.forEach(s => {
-        const checked = parsed[s] === mode ? 'checked' : '';
-        const label = mode === 'read&write' ? 'قراءة وكتابة' : 'إخفاء';
-        tbl += `<td><label>
-          <input type="radio" name="power_${s}" value="${mode}" ${checked}> ${label}
-        </label></td>`;
-      });
-      tbl += '</tr>';
-    });
-    tbl += '</table>';
-
-    // بناء الـ dialog
-    const overlay = document.createElement('div');
-    overlay.className = 'dialog-overlay';
-    overlay.setAttribute('data-dialog', '');
-    overlay.innerHTML = `
-      <div class="dialog-box">
-        <h3 style="margin-bottom:15px;">تعديل ${u.name}</h3>
-        <div class="form-group">
-          <label>الاسم</label>
-          <input type="text" id="editName" value="${u.name}" />
-        </div>
-        <div class="form-group">
-          <label>النوع</label>
-          <select id="editType">
-            <option value="admin" ${u.type==='admin'?'selected':''}>مدير</option>
-            <option value="employee" ${u.type==='employee'?'selected':''}>موظف</option>
-          </select>
-        </div>
-        <div class="form-group" style="display:flex;align-items:center;gap:10px;">
-          <input type="text" id="editPassword" value="${u.password}" disabled style="background:#eee;flex:1;">
-          <button class="btn-submit" onclick="navigator.clipboard.writeText('${u.password}')">📋 نسخ</button>
-          <button class="btn-submit" onclick="confirmPasswordReset('${id}')">🔁 إعادة تعيين</button>
-        </div>
-        <strong>الصلاحيات</strong>
-        ${tbl}
-        <div class="dialog-actions">
-          <button class="btn-submit" onclick="saveEdit('${id}')">حفظ</button>
-          <button class="btn-close" onclick="this.closest('[data-dialog]').remove()">إغلاق</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
+// لو u.powers === 'all'
+if (u.powers.trim() === 'all') {
+  secs.forEach(s => parsed[s] = 'read&write');
+} else {
+  u.powers.split(' - ').forEach(p => {
+    const [k,v] = p.split(':').map(x=>x.trim());
+    parsed[k] = v;
   });
 }
+
+
 
   function confirmPasswordReset(id) {
     if (confirm("هل أنت متأكد من توليد كلمة مرور جديدة؟")) {
