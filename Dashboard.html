@@ -531,6 +531,33 @@ border-radius: 25px;
 
 }
 
+/* === Buttons inside staff-card (edit, delete, copy) === */
+.staff-card {
+  position: relative;    /* حتى نستطيع رفع z-index داخلياً */
+  z-index: 0;
+}
+
+.staff-card button {
+  background: #1bc0be;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
+  margin: 0 5px;
+  font-size: 16px;
+  transition: background 0.2s;
+  
+  /* نضيف هذي للتأكد من أنه يقبل النقرات */
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.staff-card button:hover {
+  background: #17a2b8;
+}
 
   </style>
 </head>
@@ -1042,10 +1069,9 @@ function loadUsers() {
 
     Object.entries(users).forEach(([id, u]) => {
       let displayPerms;
-      if (u.powers.trim() === 'all') {
-        // لو كله، نظهر كل الأقسام مفصولة بفواصل
-        displayPerms = Object.values(mapName).join('، ');
-      } else {
+     
+        
+        
         displayPerms = u.powers
           .split(' - ')
           .map(p => mapName[p.split(':')[0].trim()])
