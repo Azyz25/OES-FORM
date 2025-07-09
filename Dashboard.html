@@ -718,6 +718,7 @@ border-radius: 25px;
     localStorage.removeItem("adminSession");
     window.location.href = "login.html";
   }
+let landingData = [];
 
   // بعد ما تجيب sessionData من localStorage
 const perms = {};
@@ -796,6 +797,10 @@ document.getElementById('sec6').addEventListener('click', () => {
   const db = firebase.database();
 
   loadLandingLinks();
+  loadLandingMessages();
+loadCurrentCourses();
+loadTrainees();
+
   let trainersCount = 0;
   let totalPeriods  = 0;
   let busyCount     = 0;
@@ -1104,15 +1109,6 @@ function loadUsers() {
   }
 
 
-// لو u.powers === 'all'
-if (u.powers.trim() === 'all') {
-  secs.forEach(s => parsed[s] = 'read&write');
-} else {
-  u.powers.split(' - ').forEach(p => {
-    const [k,v] = p.split(':').map(x=>x.trim());
-    parsed[k] = v;
-  });
-}
 
 
 
