@@ -1069,14 +1069,7 @@ function loadUsers() {
 
     Object.entries(users).forEach(([id, u]) => {
       let displayPerms;
-     
-        
-        
-        displayPerms = u.powers
-          .split(' - ')
-          .map(p => mapName[p.split(':')[0].trim()])
-          .join('، ');
-      }
+   
 
       cont.insertAdjacentHTML('beforeend', `
         <div class="staff-card">
