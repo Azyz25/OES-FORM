@@ -261,7 +261,7 @@ input#cvFile:hover {
         <input type="text" id="nationalId" placeholder="رقم الهوية الوطنية" maxlength="10" required>
         <div class="hint">10 أرقام فقط</div>
 <div class="form-group">
-    <label for="cvFile">رفع السيرة الذاتية (PDF أو Word)</label>
+    <label for="cvFile">رفع السيرة الذاتية (PDF أو Word) - ( اختياري )</label>
     <input type="file" id="cvFile" accept=".pdf,.doc,.docx" required>
   </div>        <div id="periodsGrid" class="grid-periods"></div>
         <button class="btn" type="submit">إرسال</button>
@@ -445,12 +445,7 @@ form.addEventListener("submit", async e => {
   if (!selectedDate)   return alert("الرجاء اختيار التاريخ.");
   if (!selectedPeriod) return alert("الرجاء اختيار الفترة.");
 
-  // تحقق من رفع السيرة
-  const cvInput = document.getElementById("cvFile");
-  if (!cvInput.files.length) {
-    return alert("الرجاء رفع السيرة الذاتية");
-  }
-  const file = cvInput.files[0];
+ 
 
   try {
     // تأكد أن الفترة غير محجوزة
@@ -464,12 +459,26 @@ form.addEventListener("submit", async e => {
       t.time===selectedPeriod)) {
       return alert("هذه الفترة محجوزة بالفعل.");
     }
+ // تحقق من رفع السيرة
+ const cvInput = document.getElementById("cvFile");
+let cvUrl = "";                             // افتراضيًا فاضي
+if (cvInput.files.length > 0) {             // فقط لو اختار المستخدم ملف
+  const file = cvInput.files[0];            // خذ أول ملف
+  const path = `cv-mdrb/${file.name}`;      // مسار التخزين
+  const sRef = storageRef(storage, path);   // إنشاء reference
+  await uploadBytes(sRef, file);            // ارفع الملف
+  cvUrl = await getDownloadURL(sRef);       // احصل على الرابط
+}
+// بعدين أدخلي cvUrl في الكائن اللي بترسليه للقاعدة
+firebase.database().ref('trainers').push({
+  name, workname, email, phone, nationalId,
+  cvUrl,                     // هنا هتكون إما رابط أو سلسلة فاضية
+  registeredAt: Date.now(),
+  courseId, courseTitle, date, time, duration, category, place, target
+});
 
     // رفع السيرة إلى Storage
-    const path       = `cv-mdrb/${file.name}`;
-    const sRef       = storageRef(storage, path);
-    await uploadBytes(sRef, file);
-    const cvUrl      = await getDownloadURL(sRef);
+    
 
     // جمع البيانات
     const traineeData = {
