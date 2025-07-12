@@ -262,7 +262,7 @@ input#cvFile:hover {
         <div class="hint">10 أرقام فقط</div>
 <div class="form-group">
     <label for="cvFile">رفع السيرة الذاتية (PDF أو Word) - ( اختياري )</label>
-    <input type="file" id="cvFile" accept=".pdf,.doc,.docx" required>
+    <input type="file" id="cvFile" accept=".pdf,.doc,.docx">
   </div>        <div id="periodsGrid" class="grid-periods"></div>
         <button class="btn" type="submit">إرسال</button>
         <div class="success-message" id="successMessage">✅ تم التسجيل بنجاح</div>
@@ -469,19 +469,11 @@ if (cvInput.files.length > 0) {             // فقط لو اختار المست
   await uploadBytes(sRef, file);            // ارفع الملف
   cvUrl = await getDownloadURL(sRef);       // احصل على الرابط
 }
-// بعدين أدخلي cvUrl في الكائن اللي بترسليه للقاعدة
-firebase.database().ref('trainers').push({
-  name, workname, email, phone, nationalId,
-  cvUrl,                     // هنا هتكون إما رابط أو سلسلة فاضية
-  registeredAt: Date.now(),
-  courseId, courseTitle, date, time, duration, category, place, target
-});
 
-    // رفع السيرة إلى Storage
-    
+
 
     // جمع البيانات
-    const traineeData = {
+await push(ref(db, 'trainers'), {
       name:        form.name.value.trim(),
       workname:    form.workname.value.trim(),
       email:       form.email.value.trim(),
@@ -497,7 +489,7 @@ firebase.database().ref('trainers').push({
       category:    currentCourse.category||"",
       target:      currentCourse.target||"",
       registeredAt:new Date().toISOString()
-    };
+});
 
     // حفظ في Realtime DB
     const newRef = push(ref(db,"trainees"));
