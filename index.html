@@ -473,7 +473,7 @@ if (cvInput.files.length > 0) {             // فقط لو اختار المست
 
 
     // جمع البيانات
-await push(ref(db, 'trainers'), {
+    const traineeData = {
       name:        form.name.value.trim(),
       workname:    form.workname.value.trim(),
       email:       form.email.value.trim(),
@@ -489,7 +489,7 @@ await push(ref(db, 'trainers'), {
       category:    currentCourse.category||"",
       target:      currentCourse.target||"",
       registeredAt:new Date().toISOString()
-});
+    };
 
     // حفظ في Realtime DB
     const newRef = push(ref(db,"trainees"));
