@@ -1423,10 +1423,29 @@ function saveEditCourse(slotCount) {
  
  
  
-  function deleteCourse(id) {
-    if (!confirm('هل أنت متأكد من حذف هذه الدورة؟')) return;
-    firebase.database().ref('courses/' + id).remove().then(loadCurrentCourses);
-  }
+function deleteCourse(courseId) {
+  if (!confirm('هل أنت متأكد من حذف هذه الدورة؟')) return;
+
+  const traineesRef = firebase.database().ref('trainees');
+
+  // أول شي نحذف كل المتدربين اللي مسجلين في نفس الدورة
+  traineesRef.once('value', (snapshot) => {
+    snapshot.forEach((child) => {
+      const trainee = child.val();
+      if (trainee.courseId === courseId) {
+        firebase.database().ref('trainees/' + child.key).remove();
+        console.log("تم حذف مدرب:", child.key);
+      }
+    });
+
+    // بعد ما نخلص نحذف الدورة نفسها
+    firebase.database().ref('courses/' + courseId).remove().then(() => {
+      console.log("تم حذف الدورة:", courseId);
+      loadCurrentCourses();
+    });
+  });
+}
+
 
   // —————————————————
 

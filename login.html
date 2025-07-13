@@ -120,7 +120,7 @@ html, body, * {
         <img class="logo" src="./OES-logo.svg" alt="شعار الجمعية">
     <h2>تسجيل دخول</h2>
     <input type="password" id="password" placeholder="كلمة المرور">
-    <button class="btn" onclick="login()">دخول</button>
+    <button class="btn" id="loginBtn" onclick="login()">دخول</button>
     <p id="message">كلمة المرور غير صحيحة</p>
     <p id="countdown"></p>
   </div>
@@ -221,6 +221,12 @@ localStorage.setItem("adminSession", JSON.stringify({
       message.classList.add("show");
     }
   }
+
+    document.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      document.getElementById("loginBtn").click();
+    }
+  });
 </script>
 </body>
 </html>
