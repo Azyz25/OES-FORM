@@ -1550,18 +1550,13 @@ function deleteTrainer(key) {
 }
 
 // في نهاية <script> لديك، تأكد من استدعاء loadTrainees() عند دخول تبويب "قائمة المدربين":
-document.getElementById('sec4').addEventListener('click', () => {
-  hideAllSections();
-  document.getElementById('trainersSection').style.display = 'block';
-  loadTrainees();
-});
+
 
 
 // 3) زر تصدير البيانات إلى CSV
 document.getElementById('exportTrainersBtn').addEventListener('click', exportTrainers);
 
 
-document.getElementById('exportTrainersBtn').addEventListener('click', exportTrainers);
 
 async function exportTrainers() {
   if (!trainersData.length) return alert('لا توجد بيانات للتصدير');
