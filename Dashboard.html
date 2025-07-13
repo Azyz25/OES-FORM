@@ -1432,29 +1432,27 @@ let trainersData = [];  // نخزنها للتصدير
 
 
 
-
 function loadTrainees() {
   const tbody = document.querySelector('#trainersTable tbody');
   tbody.innerHTML = '';
-  let trainersData = [];
 
+  const seen = new Set();
   firebase.database().ref('trainees').once('value').then(snapshot => {
     snapshot.forEach(childSnapshot => {
       const t = childSnapshot.val();
 
-      // تجاهل أي بيانات تاريخ غير إنجليزي (عربي أو ناقص)
-      if (!t.registeredAt || !/^\d{4}-\d{2}-\d{2}T/.test(t.registeredAt)) {
-        return;
-      }
+      // تجاهل السجلات بدون تاريخ أو بصيغة غير إنجليزية
+      if (!t.registeredAt || !/^\d{4}-\d{2}-\d{2}T/.test(t.registeredAt)) return;
 
-      // تحويل التاريخ لعرض إنجليزي
+      // منع التكرار بناءً على رقم الهوية أو الإيميل
+      const uniqueKey = t.nationalId || t.email;
+      if (seen.has(uniqueKey)) return;
+      seen.add(uniqueKey);
+
+      // تنسيق التاريخ للعرض
       const regDate = new Date(t.registeredAt).toLocaleString('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
       });
 
       const row = document.createElement('tr');
@@ -1471,7 +1469,6 @@ function loadTrainees() {
         <td><a href="${t.cvUrl || '#'}" target="_blank">عرض</a></td>
       `;
       tbody.appendChild(row);
-      trainersData.push(t);
     });
   });
 }
