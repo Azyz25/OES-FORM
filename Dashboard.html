@@ -1444,19 +1444,26 @@ document.getElementById('sec4').addEventListener('click', () => {
 // 2) جلب البيانات من Firebase وعرضها في الجدول
 let trainersData = [];  // نخزنها للتصدير
 
-
 function loadTrainees() {
+  // إعادة تهيئة المصفوفة في كل مرة
+  trainersData = [];
+
   const tbody = document.querySelector('#trainersTable tbody');
   tbody.innerHTML = '';
 
   firebase.database().ref('trainees').once('value').then(snapshot => {
     const data = snapshot.val() || {};
+
     Object.entries(data).forEach(([key, t]) => {
-      // زر عرض السيرة أو زر "غير مرفوع" إذا كانت السيرة فارغة
+      // خزن السجل في المصفوفة ليتم تصديره لاحقاً
+      trainersData.push(t);
+
+      // زر عرض السيرة أو زر غير مرفوع
       const cvBtn = t.cvUrl && t.cvUrl.trim()
         ? `<button class="btn" onclick="window.open('${t.cvUrl}', '_blank')">عرض</button>`
         : `<button class="btn disabled">غير مرفوع</button>`;
 
+      // أضف صف الجدول
       tbody.insertAdjacentHTML('beforeend', `
         <tr>
           <td>${t.name}</td>
@@ -1474,17 +1481,14 @@ function loadTrainees() {
           <td>${t.category}</td>
           <td>${t.place}</td>
           <td>${t.target}</td>
-          <td>
-            <button class="btn" onclick="editTrainer('${key}')">✏️</button>
-          </td>
-          <td>
-            <button class="btn" onclick="deleteTrainer('${key}')">🗑️</button>
-          </td>
+          <td><button class="btn" onclick="editTrainer('${key}')">✏️</button></td>
+          <td><button class="btn" onclick="deleteTrainer('${key}')">🗑️</button></td>
         </tr>
       `);
     });
 
-    if (!Object.keys(data).length) {
+    // إذا ما فيه بيانات، أظهر رسالة
+    if (trainersData.length === 0) {
       tbody.innerHTML = `
         <tr>
           <td colspan="17">لا يوجد مدربين مسجلين</td>
@@ -1493,6 +1497,13 @@ function loadTrainees() {
     }
   });
 }
+
+// تأكد من استدعاء loadTrainees() عند فتح تبويب "قائمة المدربين"
+document.getElementById('sec4').addEventListener('click', () => {
+  hideAllSections();
+  document.getElementById('trainersSection').style.display = 'block';
+  loadTrainees();
+});
 
 // -------------------
 // 2) دالتا التعديل والحذف
