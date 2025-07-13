@@ -235,24 +235,37 @@
   </div>
 
   <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue, get, push, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  onValue,
+  get,
+  push,
+  set
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-    // 1) تهيئة Firebase
-    const firebaseConfig = {
-      apiKey: atob("QWl6YVN5QmxzWS1NTXhCekNjNm44WHotWjlIMmJ1dW40anN6SQ=="),
-      authDomain: "abbait-4e902.firebaseapp.com",
-      databaseURL: "https://abbait-4e902-default-rtdb.firebaseio.com",
-      projectId: "abbait-4e902",
-      storageBucket: "abbait-4e902.appspot.com",
-      messagingSenderId: "12872633784",
-      appId: "1:12872633784:web:dc8ff66d9bc6c0eb38134d"
-    };
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const storage = getStorage(app);
+// 1) تهيئة Firebase
+const firebaseConfig = {
+  apiKey: atob("QWl6YVN5QmxzWS1NTXhCekNjNm44WHotWjlIMmJ1dW40anN6SQ=="),
+  authDomain: "abbait-4e902.firebaseapp.com",
+  databaseURL: "https://abbait-4e902-default-rtdb.firebaseio.com",
+  projectId: "abbait-4e902",
+  storageBucket: "abbait-4e902.appspot.com",
+  messagingSenderId: "12872633784",
+  appId: "1:12872633784:web:dc8ff66d9bc6c0eb38134d"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const storage = getStorage(app, "gs://dedoapp-865f7.appspot.com");
+
 
     let selectedDate = null;
     let selectedPeriod = null;
