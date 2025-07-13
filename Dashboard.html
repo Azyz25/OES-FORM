@@ -1626,7 +1626,7 @@ async function exportTrainers() {
 
   // 2) إضافة ملف الإكسيل للـ ZIP
   const excelBuffer = await workbook.xlsx.writeBuffer();
-  zip.file(`التدريبون_${dateTag}.xlsx`, excelBuffer);
+  zip.file(`المدربين_${dateTag}.xlsx`, excelBuffer);
 
   // 3) إضافة كل ملفات السيرة الذاتية
   for (const t of trainersData) {
