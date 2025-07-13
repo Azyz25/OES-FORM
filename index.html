@@ -446,7 +446,7 @@
           place:       currentCourse.place||"",
           category:    currentCourse.category||"",
           target:      currentCourse.target||"",
-          registeredAt:new Date().toLocaleString('ar-EG'),
+          registeredAt:new Date().toISOString()
         };
 
         // حفظ في Realtime DB
