@@ -773,10 +773,7 @@ document.getElementById('sec3').addEventListener('click', () => {
   hideAllSections();
   document.getElementById('currentSection').style.display = 'block';
 });
-document.getElementById('sec4').addEventListener('click', () => {
-  hideAllSections();
-  document.getElementById('trainersSection').style.display = 'block';
-});
+
 document.getElementById('sec5').addEventListener('click', () => {
   hideAllSections();
   document.getElementById('staffSection').style.display = 'block';
@@ -1429,74 +1426,60 @@ function saveEditCourse(slotCount) {
   }
 
   // —————————————————
-// 1) عرض القسم عند الضغط على "قائمة المدربين"
-document.getElementById('sec4').addEventListener('click', () => {
-  // إخفاء باقي الأقسام
-  ['dashboardSection','staffSection','uploadSection','currentSection'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
-  // إظهار جدول المدربين
-  document.getElementById('trainersSection').style.display = 'block';
-  loadTrainees();  // جلب البيانات
-});
 
 // 2) جلب البيانات من Firebase وعرضها في الجدول
 let trainersData = [];  // نخزنها للتصدير
 
-function loadTrainees() {
-  // إعادة تهيئة المصفوفة في كل مرة
-  trainersData = [];
 
+
+
+function loadTrainees() {
   const tbody = document.querySelector('#trainersTable tbody');
   tbody.innerHTML = '';
+  let trainersData = [];
 
   firebase.database().ref('trainees').once('value').then(snapshot => {
-    const data = snapshot.val() || {};
+    snapshot.forEach(childSnapshot => {
+      const t = childSnapshot.val();
 
-    Object.entries(data).forEach(([key, t]) => {
-      // خزن السجل في المصفوفة ليتم تصديره لاحقاً
-      trainersData.push(t);
+      // تجاهل أي بيانات تاريخ غير إنجليزي (عربي أو ناقص)
+      if (!t.registeredAt || !/^\d{4}-\d{2}-\d{2}T/.test(t.registeredAt)) {
+        return;
+      }
 
-      // زر عرض السيرة أو زر غير مرفوع
-      const cvBtn = t.cvUrl && t.cvUrl.trim()
-        ? `<button class="btn" onclick="window.open('${t.cvUrl}', '_blank')">عرض</button>`
-        : `<button class="btn disabled">غير مرفوع</button>`;
+      // تحويل التاريخ لعرض إنجليزي
+      const regDate = new Date(t.registeredAt).toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
 
-      // أضف صف الجدول
-      tbody.insertAdjacentHTML('beforeend', `
-        <tr>
-          <td>${t.name}</td>
-          <td>${t.workname || ''}</td>
-          <td>${t.email}</td>
-          <td>${t.phone}</td>
-          <td>${t.nationalId}</td>
-          <td>${cvBtn}</td>
-          <td>${new Date(t.registeredAt).toLocaleString('ar-EG')}</td>
-          <td>${t.courseId}</td>
-          <td>${t.courseTitle}</td>
-          <td>${t.date}</td>
-          <td>${t.time}</td>
-          <td>${t.duration}</td>
-          <td>${t.category}</td>
-          <td>${t.place}</td>
-          <td>${t.target}</td>
-          <td><button class="btn" onclick="editTrainer('${key}')">✏️</button></td>
-          <td><button class="btn" onclick="deleteTrainer('${key}')">🗑️</button></td>
-        </tr>
-      `);
-    });
-
-    // إذا ما فيه بيانات، أظهر رسالة
-    if (trainersData.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="17">لا يوجد مدربين مسجلين</td>
-        </tr>
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${t.name || ''}</td>
+        <td>${t.nationalId || ''}</td>
+        <td>${t.phone || ''}</td>
+        <td>${t.email || ''}</td>
+        <td>${t.courseTitle || ''}</td>
+        <td>${t.date || ''}</td>
+        <td>${t.time || ''}</td>
+        <td>${t.place || ''}</td>
+        <td>${regDate}</td>
+        <td><a href="${t.cvUrl || '#'}" target="_blank">عرض</a></td>
       `;
-    }
+      tbody.appendChild(row);
+      trainersData.push(t);
+    });
   });
 }
+
+
+
+
+
 
 // تأكد من استدعاء loadTrainees() عند فتح تبويب "قائمة المدربين"
 document.getElementById('sec4').addEventListener('click', () => {
