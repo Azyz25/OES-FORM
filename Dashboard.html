@@ -487,6 +487,11 @@ html, body, * {
     font-family: 'TheSansPlain' !important;
 }
 
+.btn.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: default;
+}
 
 img.side-logo{
     margin-bottom: 25px;
@@ -1438,13 +1443,20 @@ document.getElementById('sec4').addEventListener('click', () => {
 
 // 2) جلب البيانات من Firebase وعرضها في الجدول
 let trainersData = [];  // نخزنها للتصدير
+
+
 function loadTrainees() {
   const tbody = document.querySelector('#trainersTable tbody');
   tbody.innerHTML = '';
+
   firebase.database().ref('trainees').once('value').then(snapshot => {
-    trainersData = [];
-    Object.values(snapshot.val()||{}).forEach(t => {
-      trainersData.push(t);
+    const data = snapshot.val() || {};
+    Object.entries(data).forEach(([key, t]) => {
+      // زر عرض السيرة أو زر "غير مرفوع" إذا كانت السيرة فارغة
+      const cvBtn = t.cvUrl && t.cvUrl.trim()
+        ? `<button class="btn" onclick="window.open('${t.cvUrl}', '_blank')">عرض</button>`
+        : `<button class="btn disabled">غير مرفوع</button>`;
+
       tbody.insertAdjacentHTML('beforeend', `
         <tr>
           <td>${t.name}</td>
@@ -1452,9 +1464,7 @@ function loadTrainees() {
           <td>${t.email}</td>
           <td>${t.phone}</td>
           <td>${t.nationalId}</td>
-          <td>
-            <button class="btn" onclick="window.open('${t.cvUrl}','_blank')">عرض</button>
-          </td>
+          <td>${cvBtn}</td>
           <td>${new Date(t.registeredAt).toLocaleString('ar-EG')}</td>
           <td>${t.courseId}</td>
           <td>${t.courseTitle}</td>
@@ -1464,11 +1474,89 @@ function loadTrainees() {
           <td>${t.category}</td>
           <td>${t.place}</td>
           <td>${t.target}</td>
+          <td>
+            <button class="btn" onclick="editTrainer('${key}')">✏️</button>
+          </td>
+          <td>
+            <button class="btn" onclick="deleteTrainer('${key}')">🗑️</button>
+          </td>
         </tr>
       `);
     });
+
+    if (!Object.keys(data).length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="17">لا يوجد مدربين مسجلين</td>
+        </tr>
+      `;
+    }
   });
 }
+
+// -------------------
+// 2) دالتا التعديل والحذف
+// -------------------
+let currentTrainerKey = null;
+
+function editTrainer(key) {
+  currentTrainerKey = key;
+  firebase.database().ref('trainees/' + key).once('value').then(snapshot => {
+    const t = snapshot.val();
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    overlay.innerHTML = `
+      <div class="dialog-box">
+        <h3>تعديل بيانات المدرب</h3>
+        <div class="form-group"><label>الاسم</label><input type="text" id="tr_name" value="${t.name}"></div>
+        <div class="form-group"><label>المسمى الوظيفي</label><input type="text" id="tr_workname" value="${t.workname || ''}"></div>
+        <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="tr_email" value="${t.email}"></div>
+        <div class="form-group"><label>الجوال</label><input type="text" id="tr_phone" value="${t.phone}"></div>
+        <div class="form-group"><label>رقم الهوية (غير قابل للتعديل)</label><input type="text" id="tr_nid" value="${t.nationalId}" disabled></div>
+        <div class="form-group"><label>التاريخ</label><input type="text" id="tr_date" value="${t.date}"></div>
+        <div class="form-group"><label>الوقت</label><input type="text" id="tr_time" value="${t.time}"></div>
+        <div class="dialog-actions">
+          <button class="btn-submit" onclick="saveTrainerEdit()">حفظ</button>
+<button class="btn-close" onclick="this.closest('.dialog-overlay').remove()">إغلاق</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  });
+}
+
+function saveTrainerEdit() {
+  const upd = {
+    name: document.getElementById('tr_name').value.trim(),
+    workname: document.getElementById('tr_workname').value.trim(),
+    email: document.getElementById('tr_email').value.trim(),
+    phone: document.getElementById('tr_phone').value.trim(),
+    date: document.getElementById('tr_date').value.trim(),
+    time: document.getElementById('tr_time').value.trim()
+  };
+  firebase.database().ref('trainees/' + currentTrainerKey).update(upd)
+    .then(() => {
+      alert('✅ تم حفظ التعديلات بنجاح');
+      document.querySelector('.dialog-overlay').remove();
+      loadTrainees();
+    })
+    .catch(err => alert('❌ خطأ أثناء الحفظ: ' + err.message));
+}
+
+function deleteTrainer(key) {
+  if (!confirm('هل أنت متأكد من حذف هذا المدرب؟')) return;
+  firebase.database().ref('trainees/' + key).remove()
+    .then(() => loadTrainees());
+}
+
+// في نهاية <script> لديك، تأكد من استدعاء loadTrainees() عند دخول تبويب "قائمة المدربين":
+document.getElementById('sec4').addEventListener('click', () => {
+  hideAllSections();
+  document.getElementById('trainersSection').style.display = 'block';
+  loadTrainees();
+});
+
+
 // 3) زر تصدير البيانات إلى CSV
 document.getElementById('exportTrainersBtn').addEventListener('click', exportTrainers);
 
