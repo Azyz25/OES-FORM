@@ -1436,9 +1436,9 @@ let trainersData = [];  // نخزنها للتصدير
 function loadTrainees() {
   // إعادة تهيئة المصفوفة في كل مرة
   trainersData = [];
-console.log("🚀 تحميل بيانات المدربين...");
- document.querySelector('#trainersTable tbody').innerHTML = '';
 
+  const tbody = document.querySelector('#trainersTable tbody');
+  tbody.innerHTML = '';
 
   firebase.database().ref('trainees').once('value').then(snapshot => {
     const data = snapshot.val() || {};
