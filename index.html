@@ -3,21 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="OES-logo.svg" type="image/svg+xml" />
+  <link rel="icon" href="OES-logo.svg" type="image/svg+xml" />
   <title>تسجيل المدربين</title>
   <style>
-
-        @font-face {
-  font-family: 'TheSansPlain';
-  src: url('TheSans-Plain.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-/* 2) تطبيق الخط على الصفحة كلها */
-html, body, * {
-  font-family: 'TheSansPlain', sans-serif !important;
-}
+    @font-face {
+      font-family: 'TheSansPlain';
+      src: url('TheSans-Plain.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    html, body, * {
+      font-family: 'TheSansPlain', sans-serif !important;
+    }
     body {
       background-color: #f3f3f3;
       padding: 2rem;
@@ -69,6 +66,11 @@ html, body, * {
       border-radius: 15px;
       cursor: pointer;
       margin-top: 1rem;
+      transition: opacity .3s;
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
     #registerModal {
       display: none;
@@ -79,26 +81,23 @@ html, body, * {
       align-items: center;
       z-index: 999;
     }
-  .modal-content {
-  background: white;
-  padding: 1rem;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 400px;
-  position: relative;
-  overflow-y: auto; /* يخليه scroll اذا صار طويل */
-  max-height: 90vh; /* يحدد الطول الأقصى */
-}
-
-/* للشاشات الكبيرة */
-@media (min-width: 1024px) {
-  .modal-content {
-    max-width: 700px; /* أو أي حجم يناسب عرض اللابتوب */
-    display: flex;
-    flex-direction: column;
-  }
-}
-
+    .modal-content {
+      background: white;
+      padding: 1rem;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 400px;
+      position: relative;
+      overflow-y: auto;
+      max-height: 90vh;
+    }
+    @media (min-width: 1024px) {
+      .modal-content {
+        max-width: 700px;
+        display: flex;
+        flex-direction: column;
+      }
+    }
     .modal-content .close-btn {
       position: absolute;
       top: 10px;
@@ -112,51 +111,19 @@ html, body, * {
       font-size: 16px;
       cursor: pointer;
     }
-input#name {
-    width: 95% !important;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    height: 50px;
-    border: solid 3px #d6d4d4;
-    border-radius: 25px;
-}
-
-input#email {
-    width: 95% !important;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    height: 50px;
-    border: solid 3px #d6d4d4;
-    border-radius: 25px;
-}
-
-input#nationalId {
-    width: 95% !important;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    height: 50px;
-    border: solid 3px #d6d4d4;
-    border-radius: 25px;
-}
-
-input#workname {
-    width: 95% !important;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    height: 50px;
-    border: solid 3px #d6d4d4;
-    border-radius: 25px;
-}
-
-
-    input#phone {
-    width: 95% !important;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    height: 50px;
-    border: solid 3px #d6d4d4;
-    border-radius: 25px;
-}
+    input#name,
+    input#workname,
+    input#email,
+    input#phone,
+    input#nationalId {
+      width: 95% !important;
+      margin: 10px 0;
+      height: 50px;
+      border: solid 3px #d6d4d4;
+      border-radius: 25px;
+      padding: 0 1rem;
+      box-sizing: border-box;
+    }
     .success-message {
       text-align: center;
       font-size: 1.2rem;
@@ -173,11 +140,12 @@ input#workname {
     .period-box {
       background-color: #e0f0ff;
       padding: 10px;
-      border-radius: 8px;
+      border-radius: 25px;
       text-align: center;
       cursor: pointer;
       transition: 0.3s;
       border: 2px solid transparent;
+      margin-bottom: 10px;
     }
     .period-box.selected {
       background-color: #007acc;
@@ -193,47 +161,29 @@ input#workname {
       font-size: 0.8rem;
       color: #888;
     }
-
-    .logo{
-
-        max-width: 200px;
-
+    .logo {
+      max-width: 200px;
     }
-
-    .period-box {
-  background-color: #e0f0ff;
-  padding: 10px;
-  border-radius: 25px; /* مدور حلو */
-  text-align: center;
-  cursor: pointer;
-  transition: 0.3s;
-  border: 2px solid transparent;
-  margin-bottom: 10px;
-}
-
-.form-group label {
-  font-weight: bold;
-  margin-bottom: 8px;
-    margin-top: 8px;
-      margin-left: 8px;
-  display: block;
-}
-input#cvFile {
-  display: block;
-  width: 94%;
-  padding: 8px;
-  border-radius: 8px;
-  border: 2px dashed #4c5fac;
-  background: #f9faff;
-  cursor: pointer;
-}
-input#cvFile:hover {
-  background: #eef4ff;
-}
-
-
+    .form-group label {
+      font-weight: bold;
+      margin: 8px 0 5px 8px;
+      display: block;
+    }
+    input#cvFile {
+      display: block;
+      width: 94%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 2px dashed #4c5fac;
+      background: #f9faff;
+      cursor: pointer;
+    }
+    input#cvFile:hover {
+      background: #eef4ff;
+    }
   </style>
-  </head>
+</head>
+<body>
   <header>
     <img class="logo" src="./OES-logo.svg" alt="شعار الجمعية">
   </header>
@@ -254,294 +204,272 @@ input#cvFile:hover {
       <form id="registerForm">
         <input type="hidden" id="selectedCourseId">
         <input type="text" id="name" placeholder="الاسم الثلاثي" required>
-        <input type="text" id="workname" placeholder="المسمى الوظيفي" required>
+        <input type="text" id="workname" placeholder="المسمى الأكاديمي" required>
         <input type="email" id="email" placeholder="البريد الإلكتروني" required>
         <input type="text" id="phone" placeholder="رقم الجوال (05XXXXXXXX)" maxlength="10" required>
         <div class="hint">مثال: 05XXXXXXXX</div>
         <input type="text" id="nationalId" placeholder="رقم الهوية الوطنية" maxlength="10" required>
         <div class="hint">10 أرقام فقط</div>
-<div class="form-group">
-    <label for="cvFile">رفع السيرة الذاتية (PDF أو Word) - ( اختياري )</label>
-    <input type="file" id="cvFile" accept=".pdf,.doc,.docx">
-  </div>        <div id="periodsGrid" class="grid-periods"></div>
-  <div class="form-group" style="display:flex; align-items:center; gap:8px; margin-top:1rem;">
-  <input type="checkbox" id="agreePolicy" />
-  <label for="agreePolicy">
-    أوافق على 
-    <a href="https://landing.oes.org.sa/view.html#3" target="_blank" style="color:rgb(44, 44, 142); text-decoration:none;">
-      سياسة عدم الإفشاء
-    </a>
-  </label>
-</div>
+
+        <div class="form-group">
+          <label for="cvFile">رفع السيرة الذاتية (PDF أو Word) - (اختياري)</label>
+          <input type="file" id="cvFile" accept=".pdf,.doc,.docx">
+        </div>
+
+        <div id="periodsGrid" class="grid-periods"></div>
+
+        <div class="form-group" style="display:flex; align-items:center; gap:8px; margin-top:1rem;">
+          <input type="checkbox" id="agreePolicy">
+          <label for="agreePolicy">
+            أوافق على
+            <a href="https://landing.oes.org.sa/view.html#3" target="_blank" style="color:rgb(44, 44, 142); text-decoration:none;">
+              سياسة عدم الإفشاء
+            </a>
+          </label>
+        </div>
 
         <button class="btn" type="submit">إرسال</button>
         <div class="success-message" id="successMessage">✅ تم التسجيل بنجاح</div>
       </form>
     </div>
   </div>
-    <!-- Firebase SDK -->
- <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  getDatabase,
-  ref,
-  onValue,
-  get,
-  push,
-  set
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-// 1) تهيئة Firebase
-const firebaseConfig = {
-  apiKey: atob("QWl6YVN5QmxzWS1NTXhCekNjNm44WHotWjlIMmJ1dW40anN6SQ=="),
-  authDomain: "abbait-4e902.firebaseapp.com",
-  databaseURL: "https://abbait-4e902-default-rtdb.firebaseio.com",
-  projectId: "abbait-4e902",
-  storageBucket: "abbait-4e902.appspot.com",
-  messagingSenderId: "12872633784",
-  appId: "1:12872633784:web:dc8ff66d9bc6c0eb38134d"
-};
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const storage = getStorage(app, "gs://dedoapp-865f7.appspot.com");
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue, get, push, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-let selectedDate = null;
-let selectedPeriod = null;
-let currentCourse = null;
+    // 1) تهيئة Firebase
+    const firebaseConfig = {
+      apiKey: atob("QWl6YVN5QmxzWS1NTXhCekNjNm44WHotWjlIMmJ1dW40anN6SQ=="),
+      authDomain: "abbait-4e902.firebaseapp.com",
+      databaseURL: "https://abbait-4e902-default-rtdb.firebaseio.com",
+      projectId: "abbait-4e902",
+      storageBucket: "abbait-4e902.appspot.com",
+      messagingSenderId: "12872633784",
+      appId: "1:12872633784:web:dc8ff66d9bc6c0eb38134d"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const storage = getStorage(app);
 
-// 2) عناصر الصفحة
-const coursesContainer  = document.getElementById("courses");
-const modal             = document.getElementById("registerModal");
-const form              = document.getElementById("registerForm");
-const successMsg        = document.getElementById("successMessage");
-const periodsGrid       = document.getElementById("periodsGrid");
-const totalCount        = document.getElementById("totalCount");
-const takenCount        = document.getElementById("takenCount");
-const availableCount    = document.getElementById("availableCount");
-// بعد تعريف form، periodsGrid، الخ…
-const agreeCheckbox = document.getElementById("agreePolicy");
-const submitBtn     = form.querySelector('button[type="submit"]');
-// اطلع الزر معطّل بالبداية
-submitBtn.disabled = true;
+    let selectedDate = null;
+    let selectedPeriod = null;
+    let currentCourse = null;
 
-// فعّل الزر بس يختار المستخدم الموافقة
-agreeCheckbox.addEventListener("change", () => {
-  submitBtn.disabled = !agreeCheckbox.checked;
-});
+    // 2) عناصر الصفحة
+    const coursesContainer = document.getElementById("courses");
+    const modal            = document.getElementById("registerModal");
+    const form             = document.getElementById("registerForm");
+    const successMsg       = document.getElementById("successMessage");
+    const periodsGrid      = document.getElementById("periodsGrid");
+    const totalCount       = document.getElementById("totalCount");
+    const takenCount       = document.getElementById("takenCount");
+    const availableCount   = document.getElementById("availableCount");
+    const agreeCheckbox    = document.getElementById("agreePolicy");
+    const submitBtn        = form.querySelector('button[type="submit"]');
 
-// كمان تضيف فحص إضافي قبل الإرسال (اختياري)
-form.addEventListener("submit", e => {
-  if (!agreeCheckbox.checked) {
-    e.preventDefault();
-    return alert("يجب الموافقة على سياسة عدم الإفشاء قبل الإرسال.");
-  }
-  // … بقية معالجتك
-}, { once: true });
-
-// 3) فتح/إغلاق المودال
-window.openModal  = openModal;
-window.closeModal = () => {
-  modal.style.display     = "none";
-  form.reset();
-  successMsg.style.display= "none";
-  selectedPeriod          = null;
-};
-
-// 4) جلب وعرض الكورسات والإحصائيات
-async function fetchCourses() {
-  onValue(ref(db, "courses"), snap => {
-    coursesContainer.innerHTML = "";
-    if (!snap.exists()) return;
-    Object.entries(snap.val()).forEach(([id, course]) => {
-      const div = document.createElement("div");
-      div.className = "course-card";
-      div.innerHTML = `
-        <img src="${course.image||'default-image.svg'}" 
-             onerror="this.onerror=null;this.src='default-image.svg';" 
-             alt="صورة الدورة"/>
-        <h4>${course.title}</h4>
-        <p>${course.description}</p>
-        <p>التصنيف: ${course.category}</p>
-        <p>المستهدفون: ${course.target}</p>
-        <p>📅 ${course.date}</p>
-        <p>⏰ ${course.time}</p>
-        <button class="btn" onclick="openModal('${id}')">سجل</button>
-      `;
-      coursesContainer.appendChild(div);
+    // زر الإرسال معطّل حتى يوافق على السياسة
+    submitBtn.disabled = true;
+    agreeCheckbox.addEventListener("change", () => {
+      submitBtn.disabled = !agreeCheckbox.checked;
     });
-  });
 
-  // إحصائيات
-  const coursesSnap = await get(ref(db, "courses"));
-  let total = 0;
-  if (coursesSnap.exists()) {
-    Object.values(coursesSnap.val()).forEach(c => {
-      total += c.time.split(",").filter(t => t.trim()).length;
-    });
-  }
-  const traineesSnap = await get(ref(db, "trainees"));
-  const busy = traineesSnap.exists() 
-             ? Object.keys(traineesSnap.val()).length 
-             : 0;
-  totalCount.textContent     = total;
-  takenCount.textContent     = busy;
-  availableCount.textContent = total - busy;
-}
+    // 3) فتح/إغلاق المودال
+    window.openModal  = openModal;
+    window.closeModal = () => {
+      modal.style.display      = "none";
+      form.reset();
+      successMsg.style.display = "none";
+      selectedPeriod           = null;
+      submitBtn.textContent    = "إرسال";
+      submitBtn.disabled       = !agreeCheckbox.checked;
+    };
 
-// 5) فتح المودال وبناء الفترات
-async function openModal(courseId) {
-  const snap   = await get(ref(db, "courses/" + courseId));
-  const course = snap.val();
-  currentCourse = { id: courseId, ...course };
-  selectedDate  = null;
-  document.getElementById("selectedCourseId").value = courseId;
-  await renderPeriods(currentCourse);
-  modal.style.display = "flex";
-}
-
-async function renderPeriods(course) {
-  periodsGrid.innerHTML = "";
-  const dates = course.date.split(",").map(d=>d.trim());
-  const times = course.time.split(",").map(t=>t.trim());
-  const traineesSnap = await get(ref(db, "trainees"));
-  const takenSlots = new Set(
-    traineesSnap.exists()
-      ? Object.values(traineesSnap.val())
-          .filter(t => t.courseId === course.id)
-          .map(t => `${t.date}_${t.time}`)
-      : []
-  );
-
-  // تواريخ
-  const datesDiv = document.createElement("div");
-  datesDiv.style.marginBottom = "20px";
-  datesDiv.innerHTML = `<h4>اختر التاريخ</h4>`;
-  dates.forEach((date,i) => {
-    const box = document.createElement("div");
-    box.className = "period-box" + 
-      (takenSlots.has(`${date}_${times[i]}`) ? " disabled" : "");
-    box.textContent = date;
-    box.onclick = () => {
-      if (box.classList.contains("disabled")) return;
-      selectedDate = date;
-      datesDiv.querySelectorAll(".period-box")
-              .forEach(b=>b.classList.remove("selected"));
-      box.classList.add("selected");
-      // تفعيل/تعطيل الأوقات
-      timesDiv.querySelectorAll(".period-box").forEach((tb,j)=>{
-        if (j===i && !takenSlots.has(`${date}_${times[j]}`)) {
-          tb.classList.remove("disabled");
-        } else {
-          tb.classList.add("disabled");
-          tb.classList.remove("selected");
-        }
+    // 4) جلب وعرض الكورسات والإحصائيات
+    async function fetchCourses() {
+      onValue(ref(db, "courses"), snap => {
+        coursesContainer.innerHTML = "";
+        if (!snap.exists()) return;
+        Object.entries(snap.val()).forEach(([id, course]) => {
+          const div = document.createElement("div");
+          div.className = "course-card";
+          div.innerHTML = `
+            <img src="${course.image||'default-image.svg'}" 
+                 onerror="this.onerror=null;this.src='default-image.svg';" 
+                 alt="صورة الدورة"/>
+            <h4>${course.title}</h4>
+            <p>${course.description}</p>
+            <p>التصنيف: ${course.category}</p>
+            <p>المستهدفون: ${course.target}</p>
+            <p>📅 ${course.date}</p>
+            <p>⏰ ${course.time}</p>
+            <button class="btn" onclick="openModal('${id}')">سجل</button>
+          `;
+          coursesContainer.appendChild(div);
+        });
       });
-    };
-    datesDiv.appendChild(box);
-  });
-  periodsGrid.appendChild(datesDiv);
 
-  // أوقات
-  const timesDiv = document.createElement("div");
-  timesDiv.innerHTML = `<h4>اختر الوقت</h4>`;
-  times.forEach((time,i)=>{
-    const box = document.createElement("div");
-    box.className = "period-box disabled";
-    box.textContent = time;
-    box.onclick = () => {
-      if (box.classList.contains("disabled")) return;
-      selectedPeriod = time;
-      timesDiv.querySelectorAll(".period-box")
-             .forEach(b=>b.classList.remove("selected"));
-      box.classList.add("selected");
-    };
-    timesDiv.appendChild(box);
-  });
-  periodsGrid.appendChild(timesDiv);
-}
-
-// 6) معالجة الإرسال
-form.addEventListener("submit", async e => {
-  e.preventDefault();
-
-  // تحقق من اختيار التاريخ والوقت
-  if (!selectedDate)   return alert("الرجاء اختيار التاريخ.");
-  if (!selectedPeriod) return alert("الرجاء اختيار الفترة.");
-
- 
-
-  try {
-    // تأكد أن الفترة غير محجوزة
-    const traineesSnap = await get(ref(db,"trainees"));
-    const allTrainees = traineesSnap.exists()
-      ? Object.values(traineesSnap.val())
-      : [];
-    if (allTrainees.some(t =>
-      t.courseId===currentCourse.id &&
-      t.date===selectedDate &&
-      t.time===selectedPeriod)) {
-      return alert("هذه الفترة محجوزة بالفعل.");
+      const coursesSnap = await get(ref(db, "courses"));
+      let total = 0;
+      if (coursesSnap.exists()) {
+        Object.values(coursesSnap.val()).forEach(c => {
+          total += c.time.split(",").filter(t => t.trim()).length;
+        });
+      }
+      const traineesSnap = await get(ref(db, "trainees"));
+      const busy = traineesSnap.exists() 
+                 ? Object.keys(traineesSnap.val()).length 
+                 : 0;
+      totalCount.textContent     = total;
+      takenCount.textContent     = busy;
+      availableCount.textContent = total - busy;
     }
- // تحقق من رفع السيرة
- const cvInput = document.getElementById("cvFile");
-let cvUrl = "";                             // افتراضيًا فاضي
-if (cvInput.files.length > 0) {             // فقط لو اختار المستخدم ملف
-  const file = cvInput.files[0];            // خذ أول ملف
-  const path = `cv-mdrb/${file.name}`;      // مسار التخزين
-  const sRef = storageRef(storage, path);   // إنشاء reference
-  await uploadBytes(sRef, file);            // ارفع الملف
-  cvUrl = await getDownloadURL(sRef);       // احصل على الرابط
-}
 
+    // 5) فتح المودال وبناء الفترات
+    async function openModal(courseId) {
+      const snap   = await get(ref(db, "courses/" + courseId));
+      const course = snap.val();
+      currentCourse = { id: courseId, ...course };
+      selectedDate  = null;
+      form.selectedCourseId.value = courseId;
+      await renderPeriods(currentCourse);
+      modal.style.display = "flex";
+    }
 
+    async function renderPeriods(course) {
+      periodsGrid.innerHTML = "";
+      const dates = course.date.split(",").map(d=>d.trim());
+      const times = course.time.split(",").map(t=>t.trim());
+      const traineesSnap = await get(ref(db, "trainees"));
+      const takenSlots = new Set(
+        traineesSnap.exists()
+          ? Object.values(traineesSnap.val())
+              .filter(t => t.courseId === course.id)
+              .map(t => `${t.date}_${t.time}`)
+          : []
+      );
 
-    // جمع البيانات
-    const traineeData = {
-      name:        form.name.value.trim(),
-      workname:    form.workname.value.trim(),
-      email:       form.email.value.trim(),
-      phone:       form.phone.value.trim(),
-      nationalId:  form.nationalId.value.trim(),
-      courseId:    currentCourse.id,
-      courseTitle: currentCourse.title,
-      date:        selectedDate,
-      time:        selectedPeriod,
-      cvUrl,
-      duration:    currentCourse.duration,
-      place:       currentCourse.place||"",
-      category:    currentCourse.category||"",
-      target:      currentCourse.target||"",
-      registeredAt:new Date().toISOString()
-    };
+      const datesDiv = document.createElement("div");
+      datesDiv.style.marginBottom = "20px";
+      datesDiv.innerHTML = `<h4>اختر التاريخ</h4>`;
+      dates.forEach((date,i) => {
+        const box = document.createElement("div");
+        box.className = "period-box" + 
+          (takenSlots.has(`${date}_${times[i]}`) ? " disabled" : "");
+        box.textContent = date;
+        box.onclick = () => {
+          if (box.classList.contains("disabled")) return;
+          selectedDate = date;
+          datesDiv.querySelectorAll(".period-box")
+                  .forEach(b=>b.classList.remove("selected"));
+          box.classList.add("selected");
+          timesDiv.querySelectorAll(".period-box").forEach((tb,j)=>{
+            if (j===i && !takenSlots.has(`${date}_${times[j]}`)) {
+              tb.classList.remove("disabled");
+            } else {
+              tb.classList.add("disabled");
+              tb.classList.remove("selected");
+            }
+          });
+        };
+        datesDiv.appendChild(box);
+      });
+      periodsGrid.appendChild(datesDiv);
 
-    // حفظ في Realtime DB
-    const newRef = push(ref(db,"trainees"));
-    await set(newRef, traineeData);
+      const timesDiv = document.createElement("div");
+      timesDiv.innerHTML = `<h4>اختر الوقت</h4>`;
+      times.forEach((time,i) => {
+        const box = document.createElement("div");
+        box.className = "period-box disabled";
+        box.textContent = time;
+        box.onclick = () => {
+          if (box.classList.contains("disabled")) return;
+          selectedPeriod = time;
+          timesDiv.querySelectorAll(".period-box")
+                 .forEach(b=>b.classList.remove("selected"));
+          box.classList.add("selected");
+        };
+        timesDiv.appendChild(box);
+      });
+      periodsGrid.appendChild(timesDiv);
+    }
 
-    // تأكيد وإعادة تحميل القائمة
-    successMsg.style.display = "block";
-    form.querySelector("button").disabled = true;
-    setTimeout(()=>{
-      window.closeModal();
-      form.querySelector("button").disabled = false;
-      fetchCourses();
-    },2000);
+    // 6) معالجة الإرسال
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
 
-  } catch(err) {
-    console.error(err);
-    alert("خطأ أثناء التسجيل: "+err.message);
-  }
-});
+      // تحقق من اختيار التاريخ والوقت
+      if (!selectedDate)   return alert("الرجاء اختيار التاريخ.");
+      if (!selectedPeriod) return alert("الرجاء اختيار الفترة.");
 
-// 7) تشغيل أولي
-fetchCourses();
-</script>
+      // تحقق من عدم تكرار رقم الهوية
+      const idValue = form.nationalId.value.trim();
+      const traineesSnap = await get(ref(db, "trainees"));
+      const allTrainees = traineesSnap.exists()
+        ? Object.values(traineesSnap.val())
+        : [];
+      if (allTrainees.some(t => t.nationalId === idValue)) {
+        return alert("رقم الهوية مسجل مسبقاً ولا يمكن التسجيل مجدداً.");
+      }
 
+      try {
+        // إظهار loading و منع إعادة الضغط
+        submitBtn.disabled = true;
+        submitBtn.textContent = "⏳ جاري الإرسال...";
+
+        // تحقق من رفع السيرة
+        const cvInput = document.getElementById("cvFile");
+        let cvUrl = "";
+        if (cvInput.files.length > 0) {
+          const file = cvInput.files[0];
+          const path = `cv-mdrb/${file.name}`;
+          const sRef = storageRef(storage, path);
+          await uploadBytes(sRef, file);
+          cvUrl = await getDownloadURL(sRef);
+        }
+
+        // جمع البيانات
+        const traineeData = {
+          name:        form.name.value.trim(),
+          workname:    form.workname.value.trim(),
+          email:       form.email.value.trim(),
+          phone:       form.phone.value.trim(),
+          nationalId:  idValue,
+          courseId:    currentCourse.id,
+          courseTitle: currentCourse.title,
+          date:        selectedDate,
+          time:        selectedPeriod,
+          cvUrl,
+          duration:    currentCourse.duration,
+          place:       currentCourse.place||"",
+          category:    currentCourse.category||"",
+          target:      currentCourse.target||"",
+          registeredAt:new Date().toISOString()
+        };
+
+        // حفظ في Realtime DB
+        const newRef = push(ref(db, "trainees"));
+        await set(newRef, traineeData);
+
+        // تأكيد وإعادة تحميل القائمة
+        successMsg.style.display = "block";
+        setTimeout(() => {
+          window.closeModal();
+          fetchCourses();
+        }, 2000);
+
+      } catch(err) {
+        console.error(err);
+        alert("خطأ أثناء التسجيل: " + err.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = "إرسال";
+      }
+    });
+
+    // 7) تشغيل أولي
+    fetchCourses();
+  </script>
 </body>
 </html>
